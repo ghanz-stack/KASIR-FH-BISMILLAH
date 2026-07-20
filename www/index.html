@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kasir Front House</title>
+<style>
+:root{
+  --primary:#0F766E; --primary-dark:#0b5c56; --primary-light:#14b8a6;
+  --ewallet:#10b981; --bank:#3b82f6; --cash:#f59e0b; --voucher:#8b5cf6;
+  --barang:#64748b; --ppob:#06b6d4; --mutasi:#6366f1;
+  --danger:#ef4444; --warning:#f59e0b; --success:#10b981;
+  --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  overscroll-behavior:contain; overflow:hidden;}
+#app-root{position:fixed; inset:0; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);}
+#screen{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px 90px 14px;}
+#screen.slide{animation:slideIn .22s ease-out;}
+@keyframes slideIn{from{opacity:0; transform:translateX(16px);} to{opacity:1; transform:translateX(0);}}
+
+/* Top bar */
+.topbar{display:flex; align-items:center; gap:10px; padding:12px 14px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff; box-shadow:0 2px 8px rgba(15,118,110,.25); position:relative; z-index:5;}
+.topbar h1{font-size:16px; margin:0; font-weight:700; flex:1;}
+.back-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:34px; height:34px; border-radius:10px;
+  font-size:18px; display:flex; align-items:center; justify-content:center;}
+.kasir-chip{font-size:11px; background:rgba(255,255,255,.18); padding:5px 10px; border-radius:20px; white-space:nowrap;}
+.lock-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:10px; font-size:15px;}
+
+/* Bottom nav */
+.bottomnav{position:fixed; left:0; right:0; bottom:0; display:flex; background:var(--card);
+  box-shadow:0 -2px 12px rgba(0,0,0,.08); padding-bottom:env(safe-area-inset-bottom); z-index:10;}
+.navbtn{flex:1; border:none; background:none; padding:9px 2px 8px; display:flex; flex-direction:column;
+  align-items:center; gap:2px; color:var(--muted); font-size:10.5px; font-weight:600;}
+.navbtn.active{color:var(--primary);}
+.navbtn .ic{font-size:19px;}
+
+/* Cards */
+.card{background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.card-hero{background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; border-radius:18px;
+  padding:18px; margin-bottom:12px; box-shadow:0 6px 16px rgba(15,118,110,.25);}
+.card-hero .lbl{font-size:12px; opacity:.85; font-weight:600;}
+.card-hero .val{font-size:28px; font-weight:800; margin-top:4px;}
+.card-sub{background:var(--card); border-radius:14px; padding:12px 14px; margin-bottom:12px; border:1px solid var(--border);}
+.card-sub .lbl{font-size:11px; color:var(--muted); font-weight:600;}
+.card-sub .val{font-size:18px; font-weight:700; margin-top:2px;}
+
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+
+.section-title{font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;
+  margin:14px 0 8px 2px;}
+
+.acc-card{border-radius:14px; padding:12px; color:#fff; position:relative; overflow:hidden; margin-bottom:8px;
+  box-shadow:0 3px 8px rgba(0,0,0,.12);}
+.acc-card .name{font-size:13px; font-weight:700;}
+.acc-card .tipe{font-size:10px; opacity:.85;}
+.acc-card .saldo{font-size:17px; font-weight:800; margin-top:6px;}
+.acc-card.low::after{content:"⚠ di bawah ambang"; position:absolute; top:8px; right:10px; font-size:9px;
+  background:rgba(0,0,0,.25); padding:2px 6px; border-radius:8px;}
+
+.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700;}
+.badge-in{background:#d1fae5; color:#065f46;}
+.badge-out{background:#fee2e2; color:#991b1b;}
+.badge-netral{background:#e2e8f0; color:#334155;}
+.badge-mutasi{background:#e0e7ff; color:#3730a3;}
+.badge-unpaid{background:#fef3c7; color:#92400e;}
+.badge-locked{background:#e2e8f0; color:#475569;}
+
+.alert-strip{display:flex; gap:8px; overflow-x:auto; margin-bottom:6px; padding-bottom:4px;}
+.alert-chip{flex:0 0 auto; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:11.5px;
+  font-weight:600; padding:8px 12px; border-radius:12px; white-space:nowrap;}
+.alert-chip.danger{background:#fef2f2; border-color:#fecaca; color:#991b1b;}
+
+.shortcuts{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:6px;}
+.shortcut{display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 2px; border-radius:14px;
+  color:#fff; font-size:10px; font-weight:700; text-align:center;}
+.shortcut .ic{font-size:20px;}
+
+/* Buttons */
+.btn{display:block; width:100%; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:700;
+  color:#fff; background:var(--primary); position:relative; overflow:hidden;}
+.btn:active{transform:scale(.98);}
+.btn-outline{background:#fff; color:var(--primary); border:1.5px solid var(--primary);}
+.btn-danger{background:var(--danger);}
+.btn-sm{padding:8px 12px; font-size:12.5px; border-radius:9px; width:auto; display:inline-block;}
+.btn-row{display:flex; gap:8px;}
+.btn-row .btn{flex:1;}
+
+/* Forms */
+label.f{display:block; font-size:12px; font-weight:700; color:var(--muted); margin:12px 0 6px;}
+input[type=text],input[type=date],input[type=number],select,textarea{
+  width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:11px; font-size:14.5px;
+  background:#fff; color:var(--text);}
+textarea{resize:vertical; min-height:56px;}
+.seg{display:flex; flex-wrap:wrap; gap:7px;}
+.seg-btn{padding:9px 13px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-size:13px;
+  font-weight:600; color:var(--text);}
+.seg-btn.sel{color:#fff; border-color:transparent;}
+.hint{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+/* Keypad */
+.amount-display{background:#0f172a; color:#fff; border-radius:14px; padding:16px; text-align:right; font-size:26px;
+  font-weight:800; margin-bottom:10px; letter-spacing:.02em;}
+.keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
+.key{padding:15px 0; text-align:center; font-size:19px; font-weight:700; background:#fff; border:1px solid var(--border);
+  border-radius:12px;}
+.key:active{background:#f1f5f9;}
+.key.fn{background:#fef2f2; color:var(--danger); font-size:15px;}
+
+/* Rows */
+.row-item{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border);}
+.row-item:last-child{border-bottom:none;}
+.row-dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+.row-main{flex:1; min-width:0;}
+.row-title{font-size:13.5px; font-weight:700;}
+.row-sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
+.row-amt{font-size:14px; font-weight:800; white-space:nowrap;}
+
+.tabs{display:flex; gap:6px; margin-bottom:12px; background:#e2e8f0; padding:4px; border-radius:12px;}
+.tab{flex:1; text-align:center; padding:8px 4px; border-radius:9px; font-size:12px; font-weight:700; color:var(--muted);}
+.tab.sel{background:#fff; color:var(--primary);}
+
+.settings-list a.setting-item{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--border);
+  text-decoration:none; color:var(--text); font-size:14px; font-weight:600; cursor:pointer;}
+.settings-list .ic{font-size:19px; width:26px; text-align:center;}
+
+/* Toast */
+#toast{position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(20px); background:#0f172a; color:#fff;
+  padding:11px 18px; border-radius:12px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; z-index:100;
+  transition:all .25s ease; max-width:88%; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.25);}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* Lock screen */
+#lockscreen{position:fixed; inset:0; background:linear-gradient(160deg,var(--primary-dark),var(--primary)); z-index:200;
+  display:flex; flex-direction:column; color:#fff; padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom);}
+.lock-inner{flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px 0;}
+.lock-logo{font-size:44px; margin-bottom:6px;}
+.lock-title{font-size:19px; font-weight:800; margin-bottom:2px;}
+.lock-sub{font-size:12.5px; opacity:.8; margin-bottom:22px;}
+.kasir-tiles{display:flex; flex-wrap:wrap; gap:12px; justify-content:center;}
+.kasir-tile{width:84px; display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; background:rgba(255,255,255,.12);
+  padding:12px 6px; border-radius:14px; border:none;}
+.kasir-avatar{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center;
+  justify-content:center; font-weight:800; font-size:17px;}
+.pin-dots{display:flex; gap:12px; margin:18px 0;}
+.pin-dot{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6);}
+.pin-dot.filled{background:#fff;}
+.pin-keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:240px;}
+.pin-key{padding:16px 0; text-align:center; font-size:20px; font-weight:700; background:rgba(255,255,255,.12); border:none;
+  border-radius:50%; color:#fff; width:64px; height:64px; justify-self:center;}
+.pin-key:active{background:rgba(255,255,255,.28);}
+.linklike{color:#fff; text-decoration:underline; font-size:12.5px; opacity:.85; background:none; border:none; margin-top:14px;}
+
+.empty-state{text-align:center; padding:40px 10px; color:var(--muted);}
+.empty-state .ic{font-size:38px; margin-bottom:8px;}
+
+.ripple{position:relative;}
+</style>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0F766E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kasir">
+</head>
+<body>
+<div id="app-root">
+  <div id="topbar" class="topbar"></div>
+  <div id="screen"></div>
+  <div id="bottomnav" class="bottomnav"></div>
+</div>
+<div id="toast"></div>
+<div id="lockscreen" style="display:none;"></div>
+
+<script>
+/* =====================================================================
+   KASIR FRONT HOUSE — Android Web App (single-file, offline-first)
+   Basis: Blueprint Sistem Kasir v3
+   Penyimpanan: localStorage (menggantikan SQLite native untuk versi web).
+   ponytail: 1 file, 1 key storage, tanpa build step, tanpa dependency luar.
+   ===================================================================== */
+
+const STORE_KEY = 'kasirAppDataV1';
+const ACC_COLOR = {ewallet:'var(--ewallet)', bank:'var(--bank)', cash:'var(--cash)',
+  voucher:'var(--voucher)', barang:'var(--barang)', ppob_server:'var(--ppob)'};
+const ACC_LABEL = {ewallet:'E-Wallet', bank:'Bank', cash:'Cash', voucher:'Voucher',
+  barang:'Barang', ppob_server:'PPOB Server'};
+
+let DB = null;
+
+function nowIso(){ return new Date().toISOString(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(table){ const id = DB.nextId[table]++; return id; }
+function fmtRp(n){ n = Math.round(Number(n)||0); const neg = n<0; n=Math.abs(n);
+  return (neg?'-':'')+'Rp '+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg, type){
+  const t = document.getElementById('toast');
+  t.textContent = (type==='error'?'⚠ ':type==='ok'?'✓ ':'') + msg;
+  t.style.background = type==='error' ? '#991b1b' : type==='ok' ? '#065f46' : '#0f172a';
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function seedIfEmpty(){
+  DB.accounts.push(
+    {id:uid('accounts'), name:'Kas Laci', tipe:'cash', saldo_awal:500000, ambang_minimum:100000, aktif:1},
+    {id:uid('accounts'), name:'DANA', tipe:'ewallet', saldo_awal:1000000, ambang_minimum:200000, aktif:1},
+    {id:uid('accounts'), name:'BCA', tipe:'bank', saldo_awal:2000000, ambang_minimum:300000, aktif:1},
+    {id:uid('accounts'), name:'Deposit H2H', tipe:'ppob_server', saldo_awal:1500000, ambang_minimum:500000, aktif:1}
+  );
+  DB.categories.push(
+    {id:uid('categories'), name:'Penjualan Pulsa/PPOB', flow:'Pemasukan'},
+    {id:uid('categories'), name:'Penjualan Barang', flow:'Pemasukan'},
+    {id:uid('categories'), name:'Belanja Stok', flow:'Pengeluaran'},
+    {id:uid('categories'), name:'Biaya Operasional', flow:'Pengeluaran'},
+    {id:uid('categories'), name:'Setoran Pemilik', flow:'Netral', arah:'+'},
+    {id:uid('categories'), name:'Ambil Pribadi (Prive)', flow:'Netral', arah:'-'}
+  );
+  DB.kasir.push({id:uid('kasir'), nama:'Admin', pin_hash:null, pin_salt:null, aktif:1});
+}
+
+function loadDB(){
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw){ try{ DB = JSON.parse(raw); }catch(e){ DB = null; } }
+  if(!DB){
+    DB = {accounts:[], categories:[], transactions:[], kasbon:[], kasir:[], closings:[],
+      nextId:{accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1}, currentKasirId:null};
+    seedIfEmpty();
+    saveDB();
+  }
+  if(!DB.closings) DB.closings=[];
+  if(!DB.nextId.closings) DB.nextId.closings=1;
+}
+function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+
+/* ---------- getters ---------- */
+function getAccount(id){ return DB.accounts.find(a=>a.id===id); }
+function getCategory(id){ return DB.categories.find(c=>c.id===id); }
+function getKasir(id){ return DB.kasir.find(k=>k.id===id); }
+function activeAccounts(){ return DB.accounts.filter(a=>a.aktif); }
+
+/* strategi saldo bertingkat: checkpoint tutup-kasir terakhir + transaksi setelahnya */
+function getLatestClosing(accountId){
+  const list = DB.closings.filter(c=>c.account_id===accountId).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  return list[0] || null;
+}
+function getSaldo(accountId){
+  const acc = getAccount(accountId); if(!acc) return 0;
+  const closing = getLatestClosing(accountId);
+  let base = closing ? closing.saldo_fisik : acc.saldo_awal;
+  const afterDate = closing ? closing.tanggal : null;
+  let total = base;
+  for(const tx of DB.transactions){
+    if(afterDate && tx.tanggal <= afterDate) continue;
+    if(tx.payment_status === 'unpaid') continue; // kasbon: belum masuk kas riil
+    if(tx.account_id===accountId){
+      if(tx.flow==='Pemasukan') total += tx.amount;
+      else if(tx.flow==='Pengeluaran') total -= tx.amount;
+      else if(tx.flow==='Netral') total += (tx.netral_arah==='-'? -tx.amount : tx.amount);
+      else if(tx.flow==='Mutasi') total -= tx.amount; // sebagai akun asal
+    }
+    if(tx.target_account_id===accountId && tx.flow==='Mutasi'){
+      total += tx.amount; // sebagai akun tujuan
+    }
+  }
+  return total;
+}
+
+/* ---------- audit ---------- */
+function runAudit(tx){
+  const reasons = [];
+  const twoMinAgo = Date.now() - 2*60*1000;
+  const dup = DB.transactions.find(t => t.id!==tx.id && t.account_id===tx.account_id && t.amount===tx.amount &&
+    t.kategori_id===tx.kategori_id && new Date(t.created_at).getTime() >= twoMinAgo);
+  if(dup) reasons.push('Kemungkinan duplikat entri (akun, kategori, nominal sama dalam 2 menit terakhir)');
+
+  const sejenis = DB.transactions.filter(t=>t.kategori_id===tx.kategori_id && t.id!==tx.id).slice(-20);
+  if(sejenis.length >= 5){
+    const avg = sejenis.reduce((s,t)=>s+t.amount,0)/sejenis.length;
+    if(avg>0 && tx.amount > avg*3) reasons.push('Nominal jauh di atas rata-rata transaksi kategori ini (>3x rata-rata)');
+  }
+  tx.flag_suspect = reasons.length ? 1 : 0;
+  tx.suspect_reasons = reasons.join('; ');
+}
+
+/* ---------- navigasi ---------- */
+let navStack = ['dashboard'];
+let navParams = {};
+const TABS = ['dashboard','input','transfer','riwayat','setting'];
+
+function currentScreen(){ return navStack[navStack.length-1]; }
+function navigate(screen, params){
+  navParams = params || {};
+  if(TABS.includes(screen)){ navStack = [screen]; }
+  else { navStack.push(screen); }
+  history.pushState({nav:navStack.length}, '', '#'+screen);
+  render();
+}
+function goBack(){
+  if(navStack.length>1){ navStack.pop(); render(); }
+  else { navigate('dashboard'); }
+}
+window.addEventListener('popstate', ()=>{ if(navStack.length>1){ navStack.pop(); render(); } });
+
+/* auto-lock saat app di-background > 60 detik */
+let hiddenAt = null;
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){ hiddenAt = Date.now(); }
+  else if(hiddenAt && Date.now()-hiddenAt > 60000){ DB.currentKasirId=null; hiddenAt=null; render(); }
+});
+
+/* ---------- PIN hashing ----------
+   crypto.subtle butuh secure context (https/localhost). Jika file dibuka
+   langsung dari disk (file://) atau WebView non-https, fallback ke hash
+   sederhana — cukup untuk PIN lokal 4-6 digit (bukan pengganti auth server). */
+async function sha256(text){
+  if(window.crypto && window.crypto.subtle){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  return simpleHash(text);
+}
+function simpleHash(text){
+  // ponytail: FNV-1a 32-bit, fallback saja saat Web Crypto tak tersedia
+  let h = 0x811c9dc5;
+  for(let i=0;i<text.length;i++){ h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h>>>0).toString(16).padStart(8,'0');
+}
+function randomSalt(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+/* ============================ RENDER ============================ */
+function render(){
+  if(!DB.currentKasirId){ renderLock(); return; }
+  document.getElementById('lockscreen').style.display='none';
+  const screen = currentScreen();
+  document.getElementById('topbar').innerHTML = renderTopbar(screen);
+  const el = document.getElementById('screen');
+  el.innerHTML = renderScreen(screen);
+  el.classList.remove('slide'); void el.offsetWidth; el.classList.add('slide');
+  el.scrollTop = 0;
+  document.getElementById('bottomnav').innerHTML = renderBottomNav(screen);
+}
+
+function renderTopbar(screen){
+  const titles = {dashboard:'Dashboard', input:'Input Transaksi', transfer:'Pindah Saldo', riwayat:'Riwayat',
+    setting:'Pengaturan', kasbon:'Kasbon', tutupkasir:'Tutup Kasir', laporan:'Laporan', audit:'Audit Log',
+    settingAkun:'Kelola Akun', settingKategori:'Kelola Kategori', settingKasir:'Kelola Kasir & PIN',
+    settingImportExport:'Import / Export CSV', txDetail:'Detail Transaksi'};
+  const isRoot = TABS.includes(screen);
+  const kasir = getKasir(DB.currentKasirId);
+  return `
+    ${!isRoot ? `<button class="back-btn" onclick="goBack()">←</button>` : `<span style="width:34px"></span>`}
+    <h1>${titles[screen]||'Kasir'}</h1>
+    <span class="kasir-chip">👤 ${esc(kasir?kasir.nama:'-')}</span>
+    <button class="lock-btn" onclick="lockNow()">🔒</button>
+  `;
+}
+function lockNow(){ DB.currentKasirId=null; render(); }
+
+function renderBottomNav(screen){
+  const items = [
+    ['dashboard','🏠','Dashboard'], ['input','➕','Input'], ['transfer','🔁','Pindah'],
+    ['riwayat','📜','Riwayat'], ['setting','⚙️','Setting']
+  ];
+  return items.map(([id,ic,label])=>`
+    <button class="navbtn ${screen===id?'active':''}" onclick="navigate('${id}')">
+      <span class="ic">${ic}</span><span>${label}</span>
+    </button>`).join('');
+}
+
+function renderScreen(screen){
+  switch(screen){
+    case 'dashboard': return screenDashboard();
+    case 'input': return screenInput();
+    case 'transfer': return screenTransfer();
+    case 'riwayat': return screenRiwayat();
+    case 'setting': return screenSettingHome();
+    case 'kasbon': return screenKasbon();
+    case 'tutupkasir': return screenTutupKasir();
+    case 'laporan': return screenLaporan();
+    case 'audit': return screenAudit();
+    case 'settingAkun': return screenSettingAkun();
+    case 'settingKategori': return screenSettingKategori();
+    case 'settingKasir': return screenSettingKasir();
+    case 'settingImportExport': return screenImportExport();
+    case 'txDetail': return screenTxDetail();
+    default: return '<div class="empty-state">Layar tidak ditemukan</div>';
+  }
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function screenDashboard(){
+  const today = todayStr();
+  let pendapatanRiil=0, volume=0;
+  for(const t of DB.transactions){
+    if(t.tanggal!==today) continue;
+    if(t.flow==='Pemasukan' && t.payment_status==='paid') pendapatanRiil += (t.profit||0);
+    if(t.flow==='Pemasukan' || t.flow==='Pengeluaran') volume += t.amount;
+  }
+  const alerts = [];
+  for(const a of activeAccounts()){
+    const s = getSaldo(a.id);
+    if(s < a.ambang_minimum) alerts.push({txt:`${a.name} di bawah ambang (${fmtRp(s)})`, danger:true});
+  }
+  const kasbonJatuhTempo = DB.kasbon.filter(k=>k.status==='unpaid' &&
+    (Date.now() - new Date(k.tanggal).getTime()) > 7*86400000);
+  if(kasbonJatuhTempo.length) alerts.push({txt:`${kasbonJatuhTempo.length} kasbon jatuh tempo (>7 hari)`, danger:true});
+  const lastAudit = DB.transactions.filter(t=>t.flag_suspect).length;
+  if(lastAudit) alerts.push({txt:`${lastAudit} transaksi ditandai audit`, danger:false});
+
+  const byTipe = {};
+  for(const a of activeAccounts()){ (byTipe[a.tipe]=byTipe[a.tipe]||[]).push(a); }
+
+  return `
+    <div class="card-hero">
+      <div class="lbl">PENDAPATAN RIIL HARI INI</div>
+      <div class="val">${fmtRp(pendapatanRiil)}</div>
+    </div>
+    <div class="card-sub">
+      <div class="lbl">VOLUME TRANSAKSI HARI INI &nbsp;<span title="Dana yang lewat, bukan pendapatan Anda">ⓘ</span></div>
+      <div class="val" style="color:var(--muted)">${fmtRp(volume)}</div>
+      <div class="hint">Dana lewat (masuk+keluar), bukan pendapatan bersih Anda.</div>
+    </div>
+    ${alerts.length? `<div class="alert-strip">${alerts.map(a=>`<div class="alert-chip ${a.danger?'danger':''}">${esc(a.txt)}</div>`).join('')}</div>`:''}
+
+    <div class="section-title">Pintasan</div>
+    <div class="shortcuts">
+      <button class="shortcut" style="background:#0F766E" onclick="navigate('tutupkasir')"><span class="ic">🔐</span>Tutup Kasir</button>
+      <button class="shortcut" style="background:var(--mutasi)" onclick="navigate('transfer')"><span class="ic">🔁</span>Pindah Saldo</button>
+      <button class="shortcut" style="background:var(--bank)" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan</button>
+      <button class="shortcut" style="background:var(--voucher)" onclick="navigate('laporan')"><span class="ic">🏷️</span>Per Kategori</button>
+      <button class="shortcut" style="background:var(--warning)" onclick="navigate('kasbon')"><span class="ic">🧾</span>Kasbon</button>
+    </div>
+
+    <div class="section-title">Saldo Akun</div>
+    ${Object.keys(byTipe).map(tipe=>`
+      <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin:8px 0 4px 2px;">${ACC_LABEL[tipe]}</div>
+      ${byTipe[tipe].map(a=>{
+        const s = getSaldo(a.id); const low = s < a.ambang_minimum;
+        return `<div class="acc-card ${low?'low':''}" style="background:${ACC_COLOR[tipe]}">
+          <div class="name">${esc(a.name)}</div>
+          <div class="tipe">${ACC_LABEL[tipe]}</div>
+          <div class="saldo">${fmtRp(s)}</div>
+        </div>`;
+      }).join('')}
+    `).join('') || `<div class="empty-state"><div class="ic">🏦</div>Belum ada akun aktif.<br>Tambahkan lewat Setting → Kelola Akun.</div>`}
+  `;
+}
+
+/* ---------------- KEYPAD (dipakai Input & Transfer) ---------------- */
+let kpValue = '0'; // string digit mentah
+function kpPress(k){
+  if(k==='back'){ kpValue = kpValue.length>1 ? kpValue.slice(0,-1) : '0'; }
+  else if(k==='clear'){ kpValue = '0'; }
+  else { kpValue = (kpValue==='0'? '' : kpValue) + k; if(kpValue.length>12) kpValue = kpValue.slice(0,12); }
+  const disp = document.getElementById('kp-display');
+  if(disp) disp.textContent = fmtRp(kpValue);
+  if(typeof window._kpOnChange==='function') window._kpOnChange(Number(kpValue));
+}
+function renderKeypad(){
+  return `
+    <div class="amount-display" id="kp-display">${fmtRp(kpValue)}</div>
+    <div class="keypad">
+      ${['1','2','3','4','5','6','7','8','9'].map(n=>`<button type="button" class="key" onclick="kpPress('${n}')">${n}</button>`).join('')}
+      <button type="button" class="key fn" onclick="kpPress('clear')">C</button>
+      <button type="button" class="key" onclick="kpPress('0')">0</button>
+      <button type="button" class="key fn" onclick="kpPress('back')">⌫</button>
+    </div>`;
+}
+
+/* ---------------- INPUT TRANSAKSI ---------------- */
+let inputState = {account_id:null, category_id:null, payment_status:'paid'};
+function screenInput(){
+  kpValue = '0';
+  inputState = {account_id: activeAccounts()[0]?.id||null, category_id: DB.categories[0]?.id||null, payment_status:'paid'};
+  const cat = getCategory(inputState.category_id);
+  return `
+    <label class="f">Akun</label>
+    <div class="seg" id="acc-seg">
+      ${activeAccounts().map(a=>`<button type="button" class="seg-btn ${a.id===inputState.account_id?'sel':''}"
+        style="${a.id===inputState.account_id?`background:${ACC_COLOR[a.tipe]}`:''}"
+        onclick="selInputAccount(${a.id})">${esc(a.name)}</button>`).join('') || '<div class="hint">Belum ada akun. Tambah di Setting.</div>'}
+    </div>
+
+    <label class="f">Kategori</label>
+    <div class="seg" id="cat-seg">
+      ${DB.categories.map(c=>`<button type="button" class="seg-btn ${c.id===inputState.category_id?'sel':''}"
+        style="${c.id===inputState.category_id?`background:${flowColor(c.flow)}`:''}"
+        onclick="selInputCategory(${c.id})">${esc(c.name)}</button>`).join('') || '<div class="hint">Belum ada kategori. Tambah di Setting.</div>'}
+    </div>
+    <div id="flow-badge">${cat? flowBadge(cat.flow) : ''}</div>
+
+    <label class="f">Nominal</label>
+    ${renderKeypad()}
+
+    <div id="profit-wrap" style="${cat && cat.flow==='Pemasukan'?'':'display:none'}">
+      <label class="f">Profit / Margin (opsional)</label>
+      <input type="text" inputmode="numeric" id="f-profit" placeholder="0" onfocus="scrollToMe(this)"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    </div>
+
+    <div id="expense-type-wrap" style="${cat && cat.flow==='Pengeluaran'?'':'display:none'}">
+      <label class="f">Jenis Beban</label>
+      <div class="seg">
+        <button type="button" class="seg-btn sel" id="et-cogs" style="background:#f59e0b" onclick="selExpenseType('COGS')">COGS (Pokok)</button>
+        <button type="button" class="seg-btn" id="et-opex" onclick="selExpenseType('OPEX')">OPEX (Operasional)</button>
+      </div>
+    </div>
+
+    <label class="f">Deskripsi (jenis)</label>
+    <input type="text" id="f-jenis" placeholder="mis. Token Listrik 50rb" onfocus="scrollToMe(this)">
+
+    <label class="f">Catatan (opsional)</label>
+    <textarea id="f-catatan" placeholder="Catatan tambahan..." onfocus="scrollToMe(this)"></textarea>
+
+    <label class="f">Status Bayar</label>
+    <div class="seg">
+      <button type="button" class="seg-btn sel" id="ps-paid" style="background:var(--success)" onclick="selPaymentStatus('paid')">Lunas</button>
+      <button type="button" class="seg-btn" id="ps-unpaid" onclick="selPaymentStatus('unpaid')">Kasbon (Belum Bayar)</button>
+    </div>
+    <div id="pelanggan-wrap" style="display:none;">
+      <label class="f">Nama Pelanggan</label>
+      <input type="text" id="f-pelanggan" placeholder="Nama pelanggan" onfocus="scrollToMe(this)">
+    </div>
+
+    <div style="height:16px"></div>
+    <button class="btn" onclick="submitTransaksi()">Simpan Transaksi</button>
+  `;
+}
+window._expenseType = 'COGS';
+function flowColor(flow){ return flow==='Pemasukan'?'var(--success)': flow==='Pengeluaran'?'var(--danger)':'var(--muted)'; }
+function flowBadge(flow){
+  const cls = flow==='Pemasukan'?'badge-in':flow==='Pengeluaran'?'badge-out':'badge-netral';
+  return `<span class="badge ${cls}">${flow}</span>`;
+}
+function selInputAccount(id){ inputState.account_id=id; rerenderInputPartial(); }
+function selInputCategory(id){ inputState.category_id=id; rerenderInputPartial(); }
+function selExpenseType(t){ window._expenseType=t;
+  document.getElementById('et-cogs').classList.toggle('sel', t==='COGS');
+  document.getElementById('et-cogs').style.background = t==='COGS' ? '#f59e0b' : '';
+  document.getElementById('et-opex').classList.toggle('sel', t==='OPEX');
+  document.getElementById('et-opex').style.background = t==='OPEX' ? '#f59e0b' : '';
+}
+function selPaymentStatus(s){ inputState.payment_status=s;
+  document.getElementById('ps-paid').classList.toggle('sel', s==='paid');
+  document.getElementById('ps-paid').style.background = s==='paid' ? 'var(--success)' : '';
+  document.getElementById('ps-unpaid').classList.toggle('sel', s==='unpaid');
+  document.getElementById('ps-unpaid').style.background = s==='unpaid' ? 'var(--warning)' : '';
+  document.getElementById('pelanggan-wrap').style.display = s==='unpaid' ? '' : 'none';
+}
+function rerenderInputPartial(){
+  const keep = kpValue;
+  document.getElementById('screen').innerHTML = screenInput();
+  kpValue = keep;
+  const disp = document.getElementById('kp-display'); if(disp) disp.textContent = fmtRp(kpValue);
+}
+function scrollToMe(el){ setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'center'}), 150); }
+
+function submitTransaksi(){
+  if(!inputState.account_id) return toast('Pilih akun dulu','error');
+  if(!inputState.category_id) return toast('Pilih kategori dulu','error');
+  const amount = Number(kpValue);
+  if(!amount || amount<=0) return toast('Nominal harus diisi','error');
+  const acc = getAccount(inputState.account_id);
+  const cat = getCategory(inputState.category_id);
+  const jenis = document.getElementById('f-jenis').value.trim() || cat.name;
+  const catatan = document.getElementById('f-catatan').value.trim();
+  const profit = cat.flow==='Pemasukan' ? Number(document.getElementById('f-profit').value||0) : 0;
+  const paymentStatus = inputState.payment_status;
+  let pelanggan = '';
+  if(paymentStatus==='unpaid'){
+    pelanggan = document.getElementById('f-pelanggan').value.trim();
+    if(!pelanggan) return toast('Isi nama pelanggan untuk transaksi kasbon','error');
+    if(cat.flow!=='Pemasukan') return toast('Kasbon hanya berlaku untuk transaksi Pemasukan','error');
+  }
+  // cek lock: akun sudah ditutup-kasir untuk tanggal hari ini?
+  const closing = getLatestClosing(acc.id);
+  const today = todayStr();
+  if(closing && today <= closing.tanggal) return toast('Tanggal ini sudah terkunci (Tutup Kasir). Gunakan transaksi penyesuaian.','error');
+
+  const tx = {
+    id: uid('transactions'), tanggal: today, account_id: acc.id, target_account_id: null,
+    kategori_id: cat.id, kategori: cat.name, jenis, flow: cat.flow, amount, profit,
+    catatan, expense_type: cat.flow==='Pengeluaran' ? window._expenseType : null,
+    payment_status: paymentStatus, netral_arah: cat.flow==='Netral' ? (cat.arah||'+') : null,
+    kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at: nowIso()
+  };
+  runAudit(tx);
+  DB.transactions.push(tx);
+  if(paymentStatus==='unpaid'){
+    DB.kasbon.push({id:uid('kasbon'), transaction_id:tx.id, nama_pelanggan:pelanggan, account_id:acc.id,
+      amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan});
+  }
+  saveDB();
+  toast(tx.flag_suspect ? 'Tersimpan, tapi ditandai audit: '+tx.suspect_reasons : 'Transaksi tersimpan', tx.flag_suspect?'error':'ok');
+  navigate('dashboard');
+}
+
+/* ---------------- TRANSFER / PINDAH SALDO ---------------- */
+let transferState = {source:null, target:null};
+function screenTransfer(){
+  kpValue = '0';
+  const accs = activeAccounts();
+  transferState.source = accs[0]?.id || null;
+  transferState.target = accs[1]?.id || accs[0]?.id || null;
+  return `
+    <label class="f">Akun Asal</label>
+    <div class="seg" id="src-seg">
+      ${accs.map(a=>`<button type="button" class="seg-btn ${a.id===transferState.source?'sel':''}"
+        style="${a.id===transferState.source?`background:${ACC_COLOR[a.tipe]}`:''}"
+        onclick="selTransferSrc(${a.id})">${esc(a.name)}</button>`).join('')}
+    </div>
+    <label class="f">Akun Tujuan</label>
+    <div class="seg" id="tgt-seg">
+      ${accs.map(a=>`<button type="button" class="seg-btn ${a.id===transferState.target?'sel':''}"
+        style="${a.id===transferState.target?`background:${ACC_COLOR[a.tipe]}`:''}"
+        onclick="selTransferTgt(${a.id})">${esc(a.name)}</button>`).join('')}
+    </div>
+
+    <label class="f">Nominal</label>
+    ${renderKeypad()}
+
+    <div class="card-sub" id="transfer-preview">${transferPreviewHtml()}</div>
+
+    <label class="f">Catatan (opsional)</label>
+    <textarea id="tr-catatan" placeholder="mis. Setor kas laci ke Sea Bank" onfocus="scrollToMe(this)"></textarea>
+
+    <div style="height:10px"></div>
+    <button class="btn" style="background:var(--mutasi)" onclick="submitTransfer()">Pindahkan Saldo</button>
+  `;
+}
+window._kpOnChange = ()=>{ const el=document.getElementById('transfer-preview'); if(el) el.innerHTML = transferPreviewHtml(); };
+function transferPreviewHtml(){
+  if(!transferState.source || !transferState.target) return '<div class="hint">Pilih akun asal & tujuan.</div>';
+  if(transferState.source === transferState.target) return '<div class="hint" style="color:var(--danger)">Akun asal & tujuan tidak boleh sama.</div>';
+  const amt = Number(kpValue);
+  const sAcc = getAccount(transferState.source), tAcc = getAccount(transferState.target);
+  const sBefore = getSaldo(sAcc.id), tBefore = getSaldo(tAcc.id);
+  return `
+    <div class="lbl">PREVIEW SALDO</div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;">
+      <span>${esc(sAcc.name)}: ${fmtRp(sBefore)} → <b style="color:var(--danger)">${fmtRp(sBefore-amt)}</b></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:12.5px;">
+      <span>${esc(tAcc.name)}: ${fmtRp(tBefore)} → <b style="color:var(--success)">${fmtRp(tBefore+amt)}</b></span>
+    </div>
+    ${amt > sBefore ? '<div class="hint" style="color:var(--danger)">Nominal melebihi saldo akun asal.</div>':''}
+  `;
+}
+function selTransferSrc(id){ transferState.source=id; rerenderTransferPartial(); }
+function selTransferTgt(id){ transferState.target=id; rerenderTransferPartial(); }
+function rerenderTransferPartial(){
+  const keep = kpValue;
+  document.getElementById('screen').innerHTML = screenTransfer();
+  kpValue = keep;
+  const disp = document.getElementById('kp-display'); if(disp) disp.textContent = fmtRp(kpValue);
+  const pv = document.getElementById('transfer-preview'); if(pv) pv.innerHTML = transferPreviewHtml();
+}
+function submitTransfer(){
+  const amount = Number(kpValue);
+  if(!amount || amount<=0) return toast('Nominal harus diisi','error');
+  if(transferState.source === transferState.target) return toast('Akun asal & tujuan tidak boleh sama','error');
+  const sAcc = getAccount(transferState.source), tAcc = getAccount(transferState.target);
+  const sBefore = getSaldo(sAcc.id);
+  if(amount > sBefore) return toast('Saldo akun asal tidak mencukupi','error');
+  const catatan = document.getElementById('tr-catatan').value.trim();
+  const today = todayStr();
+  const closing = getLatestClosing(sAcc.id);
+  if(closing && today <= closing.tanggal) return toast('Akun asal sudah terkunci (Tutup Kasir)','error');
+  const closingTgt = getLatestClosing(tAcc.id);
+  if(closingTgt && today <= closingTgt.tanggal) return toast('Akun tujuan sudah terkunci (Tutup Kasir)','error');
+
+  const tx = {id: uid('transactions'), tanggal: today, account_id: sAcc.id, target_account_id: tAcc.id,
+    kategori_id:null, kategori:'Mutasi Saldo', jenis:'Pindah Saldo', flow:'Mutasi', amount, profit:0,
+    catatan, expense_type:null, payment_status:'paid', netral_arah:null,
+    kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at: nowIso()};
+  runAudit(tx);
+  DB.transactions.push(tx);
+  saveDB();
+  toast('Saldo berhasil dipindahkan','ok');
+  navigate('dashboard');
+}
+
+/* ---------------- RIWAYAT ---------------- */
+let riwayatFilter = 'all';
+let riwayatLimit = 30;
+function screenRiwayat(){
+  let list = DB.transactions.slice().sort((a,b)=> (b.tanggal+String(b.id).padStart(6,'0')).localeCompare(a.tanggal+String(a.id).padStart(6,'0')));
+  if(riwayatFilter!=='all') list = list.filter(t=>t.flow===riwayatFilter);
+  const shown = list.slice(0, riwayatLimit);
+  const tabs = [['all','Semua'],['Pemasukan','Masuk'],['Pengeluaran','Keluar'],['Mutasi','Mutasi'],['Netral','Netral']];
+  return `
+    <div class="tabs">
+      ${tabs.map(([id,label])=>`<div class="tab ${riwayatFilter===id?'sel':''}" onclick="setRiwayatFilter('${id}')">${label}</div>`).join('')}
+    </div>
+    <div class="card" style="padding:6px 14px;">
+      ${shown.length? shown.map(t=>renderTxRow(t)).join('') : `<div class="empty-state"><div class="ic">📭</div>Belum ada transaksi.</div>`}
+    </div>
+    ${list.length > shown.length ? `<button class="btn btn-outline" onclick="riwayatLimit+=30; document.getElementById('screen').innerHTML=screenRiwayat();">Muat Lebih Banyak</button>` : ''}
+  `;
+}
+function setRiwayatFilter(f){ riwayatFilter=f; riwayatLimit=30; document.getElementById('screen').innerHTML = screenRiwayat(); }
+function renderTxRow(t){
+  const acc = getAccount(t.account_id);
+  const color = t.flow==='Mutasi' ? 'var(--mutasi)' : t.flow==='Pemasukan' ? 'var(--success)' : t.flow==='Pengeluaran' ? 'var(--danger)' : 'var(--muted)';
+  const sign = t.flow==='Pengeluaran' ? '-' : t.flow==='Pemasukan' ? '+' : t.flow==='Mutasi' ? '⇄' : '•';
+  const badges = [];
+  if(t.flow==='Mutasi') badges.push('<span class="badge badge-mutasi">Mutasi</span>');
+  if(t.payment_status==='unpaid') badges.push('<span class="badge badge-unpaid">Kasbon</span>');
+  if(t.locked) badges.push('<span class="badge badge-locked">🔒</span>');
+  if(t.flag_suspect) badges.push('<span class="badge badge-out">⚑ Audit</span>');
+  return `
+    <div class="row-item" onclick="navigate('txDetail',{id:${t.id}})">
+      <div class="row-dot" style="background:${color}"></div>
+      <div class="row-main">
+        <div class="row-title">${esc(t.jenis)} ${badges.join(' ')}</div>
+        <div class="row-sub">${esc(acc?acc.name:'-')} ${t.target_account_id? '→ '+esc(getAccount(t.target_account_id)?.name||'-') : ''} · ${t.tanggal}</div>
+      </div>
+      <div class="row-amt" style="color:${color}">${sign} ${fmtRp(t.amount)}</div>
+    </div>`;
+}
+function screenTxDetail(){
+  const t = DB.transactions.find(x=>x.id===navParams.id);
+  if(!t) return '<div class="empty-state">Transaksi tidak ditemukan.</div>';
+  const acc = getAccount(t.account_id);
+  return `
+    <div class="card">
+      <div class="section-title" style="margin-top:0">${t.flow}</div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:10px;">${fmtRp(t.amount)}</div>
+      <div class="row-item"><div class="row-main"><div class="row-sub">Tanggal</div><div class="row-title">${t.tanggal}</div></div></div>
+      <div class="row-item"><div class="row-main"><div class="row-sub">Akun</div><div class="row-title">${esc(acc?acc.name:'-')}${t.target_account_id?' → '+esc(getAccount(t.target_account_id)?.name||'-'):''}</div></div></div>
+      <div class="row-item"><div class="row-main"><div class="row-sub">Kategori / Deskripsi</div><div class="row-title">${esc(t.kategori||'-')} — ${esc(t.jenis)}</div></div></div>
+      ${t.profit? `<div class="row-item"><div class="row-main"><div class="row-sub">Profit</div><div class="row-title">${fmtRp(t.profit)}</div></div></div>`:''}
+      ${t.expense_type? `<div class="row-item"><div class="row-main"><div class="row-sub">Jenis Beban</div><div class="row-title">${t.expense_type}</div></div></div>`:''}
+      <div class="row-item"><div class="row-main"><div class="row-sub">Status Bayar</div><div class="row-title">${t.payment_status==='paid'?'Lunas':'Kasbon (Belum Bayar)'}</div></div></div>
+      ${t.catatan? `<div class="row-item"><div class="row-main"><div class="row-sub">Catatan</div><div class="row-title">${esc(t.catatan)}</div></div></div>`:''}
+      ${t.flag_suspect? `<div class="row-item"><div class="row-main"><div class="row-sub" style="color:var(--danger)">Ditandai Audit</div><div class="row-title">${esc(t.suspect_reasons)}</div></div></div>`:''}
+      ${t.locked? `<div class="hint" style="color:var(--danger);margin-top:6px;">🔒 Terkunci — sudah masuk periode Tutup Kasir, tidak bisa diubah/dihapus. Buat transaksi penyesuaian baru jika perlu koreksi.</div>`
+        : `<div class="btn-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="deleteTx(${t.id})">Hapus Transaksi</button></div>`}
+    </div>
+  `;
+}
+function deleteTx(id){
+  const t = DB.transactions.find(x=>x.id===id);
+  if(!t || t.locked) return toast('Transaksi terkunci, tidak bisa dihapus','error');
+  if(!confirm('Hapus transaksi ini?')) return;
+  DB.transactions = DB.transactions.filter(x=>x.id!==id);
+  DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==id);
+  saveDB(); toast('Transaksi dihapus','ok'); navigate('riwayat');
+}
+
+/* ---------------- KASBON ---------------- */
+function screenKasbon(){
+  const unpaid = DB.kasbon.filter(k=>k.status==='unpaid').sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+  const paid = DB.kasbon.filter(k=>k.status==='paid').slice(-15).reverse();
+  return `
+    <div class="section-title">Belum Lunas (${unpaid.length})</div>
+    <div class="card" style="padding:6px 14px;">
+      ${unpaid.length? unpaid.map(k=>{
+        const jatuhTempo = (Date.now()-new Date(k.tanggal).getTime())>7*86400000;
+        return `<div class="row-item">
+          <div class="row-dot" style="background:${jatuhTempo?'var(--danger)':'var(--warning)'}"></div>
+          <div class="row-main">
+            <div class="row-title">${esc(k.nama_pelanggan)} ${jatuhTempo?'<span class="badge badge-out">Jatuh Tempo</span>':''}</div>
+            <div class="row-sub">${k.tanggal} · akun ${esc(getAccount(k.account_id)?.name||'-')}</div>
+          </div>
+          <div class="row-amt" style="color:var(--warning)">${fmtRp(k.amount)}</div>
+        </div>
+        <div style="padding:0 0 10px 19px;"><button class="btn btn-sm" onclick="lunasiKasbon(${k.id})">Tandai Lunas</button></div>`;
+      }).join('') : `<div class="empty-state"><div class="ic">✅</div>Tidak ada kasbon tertunda.</div>`}
+    </div>
+    <div class="section-title">Riwayat Lunas</div>
+    <div class="card" style="padding:6px 14px;">
+      ${paid.length? paid.map(k=>`<div class="row-item">
+          <div class="row-dot" style="background:var(--success)"></div>
+          <div class="row-main"><div class="row-title">${esc(k.nama_pelanggan)}</div>
+          <div class="row-sub">Lunas ${k.tanggal_lunas}</div></div>
+          <div class="row-amt" style="color:var(--success)">${fmtRp(k.amount)}</div>
+        </div>`).join('') : `<div class="empty-state">Belum ada riwayat.</div>`}
+    </div>
+  `;
+}
+function lunasiKasbon(id){
+  const k = DB.kasbon.find(x=>x.id===id); if(!k) return;
+  if(!confirm(`Tandai kasbon ${k.nama_pelanggan} sebesar ${fmtRp(k.amount)} sebagai lunas?`)) return;
+  const cashAcc = DB.accounts.find(a=>a.tipe==='cash' && a.aktif) || DB.accounts[0];
+  if(!cashAcc) return toast('Tidak ada akun kas aktif untuk menerima pelunasan','error');
+  const closing = getLatestClosing(cashAcc.id);
+  const today = todayStr();
+  if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa terima pelunasan hari ini','error');
+  k.status='paid'; k.tanggal_lunas = today;
+  const tx = {id:uid('transactions'), tanggal: today, account_id: cashAcc.id, target_account_id:null,
+    kategori_id:null, kategori:'Pelunasan Kasbon', jenis:'Pelunasan kasbon: '+k.nama_pelanggan, flow:'Pemasukan',
+    amount:k.amount, profit:0, catatan:'Pelunasan kasbon #'+k.id, expense_type:null, payment_status:'paid',
+    netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
+  DB.transactions.push(tx);
+  saveDB(); toast('Kasbon dilunasi','ok'); navigate('kasbon');
+}
+
+/* ---------------- TUTUP KASIR ---------------- */
+let closingAccId = null;
+function screenTutupKasir(){
+  closingAccId = closingAccId || activeAccounts()[0]?.id;
+  const acc = getAccount(closingAccId);
+  const saldoSistem = acc? getSaldo(acc.id) : 0;
+  const relatedKasbon = DB.kasbon.filter(k=>k.status==='unpaid' && k.account_id===closingAccId && k.tanggal===todayStr());
+  return `
+    <label class="f">Pilih Akun</label>
+    <div class="seg">
+      ${activeAccounts().map(a=>`<button type="button" class="seg-btn ${a.id===closingAccId?'sel':''}"
+        style="${a.id===closingAccId?`background:${ACC_COLOR[a.tipe]}`:''}"
+        onclick="closingAccId=${a.id}; document.getElementById('screen').innerHTML=screenTutupKasir();">${esc(a.name)}</button>`).join('')}
+    </div>
+    <div class="card-sub">
+      <div class="lbl">SALDO SISTEM SAAT INI</div>
+      <div class="val">${fmtRp(saldoSistem)}</div>
+    </div>
+    ${relatedKasbon.length? `<div class="hint" style="color:var(--warning)">Ada ${relatedKasbon.length} kasbon belum lunas hari ini terkait akun ini — selisih terkait ini tidak otomatis dianggap kecurangan.</div>`:''}
+    <label class="f">Saldo Fisik (hasil hitung nyata)</label>
+    <input type="text" id="f-saldofisik" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,''); updateSelisihPreview(${saldoSistem})">
+    <div id="selisih-preview" class="hint"></div>
+    <label class="f">Catatan (opsional)</label>
+    <textarea id="f-closing-catatan" onfocus="scrollToMe(this)"></textarea>
+    <div style="height:10px"></div>
+    <button class="btn btn-danger" onclick="submitClosing(${saldoSistem})">Tutup Kasir Akun Ini</button>
+  `;
+}
+function updateSelisihPreview(saldoSistem){
+  const fisik = Number(document.getElementById('f-saldofisik').value||0);
+  const selisih = fisik - saldoSistem;
+  const el = document.getElementById('selisih-preview');
+  el.style.color = selisih===0 ? 'var(--success)' : 'var(--danger)';
+  el.textContent = 'Selisih: ' + fmtRp(selisih) + (selisih===0? ' (sesuai)' : selisih>0 ? ' (lebih)' : ' (kurang)');
+}
+function submitClosing(saldoSistem){
+  const fisik = Number(document.getElementById('f-saldofisik').value||0);
+  const catatan = document.getElementById('f-closing-catatan').value.trim();
+  const selisih = fisik - saldoSistem;
+  if(!confirm('Tutup kasir untuk akun ini? Semua transaksi hari ini & sebelumnya pada akun ini akan terkunci permanen.')) return;
+  DB.closings.push({id:uid('closings'), tanggal: todayStr(), account_id: closingAccId, saldo_sistem: saldoSistem,
+    saldo_fisik: fisik, selisih, catatan, waktu_tutup: nowIso()});
+  const today = todayStr();
+  DB.transactions.forEach(t=>{
+    if((t.account_id===closingAccId || t.target_account_id===closingAccId) && t.tanggal<=today) t.locked=1;
+  });
+  saveDB();
+  toast(selisih===0? 'Kasir ditutup, saldo sesuai' : 'Kasir ditutup, ada selisih '+fmtRp(selisih), selisih===0?'ok':'error');
+  navigate('dashboard');
+}
+
+/* ---------------- LAPORAN ---------------- */
+function screenLaporan(){
+  const today = todayStr();
+  const monthPrefix = today.slice(0,7);
+  const inMonth = DB.transactions.filter(t=>t.tanggal.startsWith(monthPrefix));
+  let pendapatan=0, cogs=0, opex=0;
+  inMonth.forEach(t=>{
+    if(t.flow==='Pemasukan' && t.payment_status==='paid') pendapatan += (t.profit||0);
+    if(t.flow==='Pengeluaran'){ if(t.expense_type==='COGS') cogs+=t.amount; else opex+=t.amount; }
+  });
+  const netProfit = pendapatan - cogs - opex;
+
+  const perKategori = {};
+  inMonth.filter(t=>t.flow==='Pemasukan').forEach(t=>{
+    perKategori[t.kategori] = perKategori[t.kategori] || {amount:0, profit:0};
+    perKategori[t.kategori].amount += t.amount; perKategori[t.kategori].profit += (t.profit||0);
+  });
+  const maxAmt = Math.max(1, ...Object.values(perKategori).map(v=>v.amount));
+
+  return `
+    <div class="section-title">Laba Rugi — ${monthPrefix}</div>
+    <div class="card">
+      <div class="row-item"><div class="row-main"><div class="row-title">Pendapatan Riil (profit)</div></div><div class="row-amt" style="color:var(--success)">${fmtRp(pendapatan)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Harga Pokok (COGS)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(cogs)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Beban Operasional (OPEX)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:15px">Laba Bersih</div></div><div class="row-amt" style="font-size:16px;color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmtRp(netProfit)}</div></div>
+    </div>
+
+    <div class="section-title">Margin per Kategori (bulan ini)</div>
+    <div class="card">
+      ${Object.keys(perKategori).length? Object.entries(perKategori).map(([k,v])=>`
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;">
+            <span>${esc(k)}</span><span>${fmtRp(v.amount)} <span style="color:var(--muted);font-weight:500;">(profit ${fmtRp(v.profit)})</span></span>
+          </div>
+          <div style="background:#e2e8f0;border-radius:8px;height:8px;margin-top:4px;">
+            <div style="background:var(--primary);height:8px;border-radius:8px;width:${(v.amount/maxAmt*100).toFixed(0)}%"></div>
+          </div>
+        </div>`).join('') : '<div class="empty-state">Belum ada data.</div>'}
+    </div>
+  `;
+}
+
+/* ---------------- AUDIT LOG ---------------- */
+function screenAudit(){
+  const flagged = DB.transactions.filter(t=>t.flag_suspect).slice().reverse();
+  const closingsWithSelisih = DB.closings.filter(c=>c.selisih!==0).slice().reverse();
+  return `
+    <div class="section-title">Transaksi Ditandai (${flagged.length})</div>
+    <div class="card" style="padding:6px 14px;">
+      ${flagged.length? flagged.map(t=>`
+        <div class="row-item" onclick="navigate('txDetail',{id:${t.id}})">
+          <div class="row-dot" style="background:var(--danger)"></div>
+          <div class="row-main"><div class="row-title">${esc(t.jenis)}</div><div class="row-sub">${esc(t.suspect_reasons)}</div></div>
+          <div class="row-amt">${fmtRp(t.amount)}</div>
+        </div>`).join('') : '<div class="empty-state"><div class="ic">✅</div>Tidak ada transaksi mencurigakan.</div>'}
+    </div>
+    <div class="section-title">Selisih Tutup Kasir</div>
+    <div class="card" style="padding:6px 14px;">
+      ${closingsWithSelisih.length? closingsWithSelisih.map(c=>{
+        const relKasbon = DB.kasbon.filter(k=>k.account_id===c.account_id && k.tanggal===c.tanggal);
+        return `<div class="row-item">
+          <div class="row-dot" style="background:var(--warning)"></div>
+          <div class="row-main"><div class="row-title">${esc(getAccount(c.account_id)?.name||'-')} · ${c.tanggal}</div>
+          <div class="row-sub">${relKasbon.length? relKasbon.length+' kasbon terkait hari itu — cek dulu sebelum simpulkan kecurangan':'Tidak ada kasbon terkait'}</div></div>
+          <div class="row-amt" style="color:var(--warning)">${fmtRp(c.selisih)}</div>
+        </div>`;
+      }).join('') : '<div class="empty-state">Belum ada selisih tercatat.</div>'}
+    </div>
+  `;
+}
+
+/* ---------------- SETTING HOME ---------------- */
+function screenSettingHome(){
+  return `
+    <div class="card settings-list" style="padding:6px 4px;">
+      <a class="setting-item" onclick="navigate('settingAkun')"><span class="ic">🏦</span>Kelola Akun</a>
+      <a class="setting-item" onclick="navigate('settingKategori')"><span class="ic">🏷️</span>Kelola Kategori</a>
+      <a class="setting-item" onclick="navigate('settingKasir')"><span class="ic">👤</span>Kelola Kasir & PIN</a>
+      <a class="setting-item" onclick="navigate('kasbon')"><span class="ic">🧾</span>Kasbon</a>
+      <a class="setting-item" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan Laba Rugi</a>
+      <a class="setting-item" onclick="navigate('audit')"><span class="ic">🔍</span>Audit Log</a>
+      <a class="setting-item" onclick="navigate('tutupkasir')"><span class="ic">🔐</span>Tutup Kasir</a>
+      <a class="setting-item" onclick="navigate('settingImportExport')"><span class="ic">⇅</span>Import / Export CSV</a>
+    </div>
+    <div class="hint" style="text-align:center;margin-top:8px;">Kasir Front House · v3-web · data tersimpan lokal di perangkat ini</div>
+  `;
+}
+
+/* ---------------- KELOLA AKUN ---------------- */
+function screenSettingAkun(){
+  return `
+    <div class="card">
+      <label class="f" style="margin-top:0">Nama Akun</label>
+      <input type="text" id="na-name" placeholder="mis. GoPay Toko">
+      <label class="f">Tipe Akun</label>
+      <select id="na-tipe">
+        ${Object.entries(ACC_LABEL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+      </select>
+      <div class="hint">Tipe akun tidak bisa diubah setelah dibuat.</div>
+      <label class="f">Saldo Awal</label>
+      <input type="text" id="na-saldo" inputmode="numeric" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <label class="f">Ambang Minimum (peringatan)</label>
+      <input type="text" id="na-ambang" inputmode="numeric" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <div style="height:8px"></div>
+      <button class="btn" onclick="addAkun()">Tambah Akun</button>
+    </div>
+    <div class="section-title">Daftar Akun</div>
+    <div class="card" style="padding:6px 14px;">
+      ${DB.accounts.map(a=>`
+        <div class="row-item">
+          <div class="row-dot" style="background:${ACC_COLOR[a.tipe]}"></div>
+          <div class="row-main"><div class="row-title">${esc(a.name)} ${a.aktif?'':'<span class="badge badge-netral">Nonaktif</span>'}</div>
+          <div class="row-sub">${ACC_LABEL[a.tipe]} · saldo skrg ${fmtRp(getSaldo(a.id))}</div></div>
+          <button class="btn btn-sm ${a.aktif?'btn-danger':''}" onclick="toggleAkun(${a.id})">${a.aktif?'Nonaktifkan':'Aktifkan'}</button>
+        </div>`).join('') || '<div class="empty-state">Belum ada akun.</div>'}
+    </div>
+  `;
+}
+function addAkun(){
+  const name = document.getElementById('na-name').value.trim();
+  if(!name) return toast('Nama akun wajib diisi','error');
+  const tipe = document.getElementById('na-tipe').value;
+  const saldo_awal = Number(document.getElementById('na-saldo').value||0);
+  const ambang_minimum = Number(document.getElementById('na-ambang').value||0);
+  DB.accounts.push({id:uid('accounts'), name, tipe, saldo_awal, ambang_minimum, aktif:1});
+  saveDB(); toast('Akun ditambahkan','ok'); document.getElementById('screen').innerHTML = screenSettingAkun();
+}
+function toggleAkun(id){
+  const a = getAccount(id); a.aktif = a.aktif?0:1; saveDB();
+  document.getElementById('screen').innerHTML = screenSettingAkun();
+}
+
+/* ---------------- KELOLA KATEGORI ---------------- */
+function screenSettingKategori(){
+  return `
+    <div class="card">
+      <label class="f" style="margin-top:0">Nama Kategori</label>
+      <input type="text" id="nk-name" placeholder="mis. Penjualan Aksesoris">
+      <label class="f">Flow (tidak bisa diubah setelah dibuat)</label>
+      <div class="seg">
+        <button type="button" class="seg-btn sel" id="nk-in" style="background:var(--success)" onclick="selNewCatFlow('Pemasukan')">Pemasukan</button>
+        <button type="button" class="seg-btn" id="nk-out" onclick="selNewCatFlow('Pengeluaran')">Pengeluaran</button>
+        <button type="button" class="seg-btn" id="nk-net" onclick="selNewCatFlow('Netral')">Netral</button>
+      </div>
+      <div id="nk-arah-wrap" style="display:none;">
+        <label class="f">Arah Saldo (khusus Netral)</label>
+        <div class="seg">
+          <button type="button" class="seg-btn sel" id="nk-arah-plus" onclick="selNewCatArah('+')">Menambah Saldo</button>
+          <button type="button" class="seg-btn" id="nk-arah-minus" onclick="selNewCatArah('-')">Mengurangi Saldo</button>
+        </div>
+      </div>
+      <div style="height:8px"></div>
+      <button class="btn" onclick="addKategori()">Tambah Kategori</button>
+    </div>
+    <div class="section-title">Daftar Kategori</div>
+    <div class="card" style="padding:6px 14px;">
+      ${DB.categories.map(c=>`
+        <div class="row-item">
+          <div class="row-main"><div class="row-title">${esc(c.name)}</div>
+            <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}</div></div>
+          <button class="btn btn-sm btn-danger" onclick="deleteKategori(${c.id})">Hapus</button>
+        </div>`).join('') || '<div class="empty-state">Belum ada kategori.</div>'}
+    </div>
+  `;
+}
+window._newCatFlow = 'Pemasukan'; window._newCatArah = '+';
+function selNewCatFlow(f){
+  window._newCatFlow = f;
+  ['nk-in','nk-out','nk-net'].forEach(id=>document.getElementById(id).classList.remove('sel'));
+  const map = {Pemasukan:'nk-in', Pengeluaran:'nk-out', Netral:'nk-net'};
+  const btn = document.getElementById(map[f]); btn.classList.add('sel'); btn.style.background = flowColor(f);
+  ['nk-in','nk-out','nk-net'].forEach(id=>{ if(id!==map[f]) document.getElementById(id).style.background=''; });
+  document.getElementById('nk-arah-wrap').style.display = f==='Netral' ? '' : 'none';
+}
+function selNewCatArah(a){
+  window._newCatArah = a;
+  document.getElementById('nk-arah-plus').classList.toggle('sel', a==='+');
+  document.getElementById('nk-arah-plus').style.background = a==='+' ? 'var(--success)' : '';
+  document.getElementById('nk-arah-minus').classList.toggle('sel', a==='-');
+  document.getElementById('nk-arah-minus').style.background = a==='-' ? 'var(--danger)' : '';
+}
+function addKategori(){
+  const name = document.getElementById('nk-name').value.trim();
+  if(!name) return toast('Nama kategori wajib diisi','error');
+  DB.categories.push({id:uid('categories'), name, flow:window._newCatFlow,
+    arah: window._newCatFlow==='Netral' ? window._newCatArah : undefined});
+  saveDB(); toast('Kategori ditambahkan','ok'); document.getElementById('screen').innerHTML = screenSettingKategori();
+}
+function deleteKategori(id){
+  if(DB.transactions.some(t=>t.kategori_id===id)) return toast('Kategori sudah dipakai transaksi, tidak bisa dihapus','error');
+  DB.categories = DB.categories.filter(c=>c.id!==id); saveDB();
+  toast('Kategori dihapus','ok'); document.getElementById('screen').innerHTML = screenSettingKategori();
+}
+
+/* ---------------- KELOLA KASIR & PIN ---------------- */
+function screenSettingKasir(){
+  return `
+    <div class="card">
+      <label class="f" style="margin-top:0">Nama Kasir Baru</label>
+      <input type="text" id="nks-name" placeholder="mis. Budi">
+      <label class="f">PIN (4-6 digit, opsional — kosongkan untuk tanpa PIN)</label>
+      <input type="text" id="nks-pin" inputmode="numeric" maxlength="6" placeholder="Kosongkan = tanpa PIN"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <div style="height:8px"></div>
+      <button class="btn" onclick="addKasir()">Tambah Kasir</button>
+    </div>
+    <div class="section-title">Daftar Kasir</div>
+    <div class="card" style="padding:6px 14px;">
+      ${DB.kasir.map(k=>`
+        <div class="row-item">
+          <div class="row-main"><div class="row-title">${esc(k.nama)} ${k.aktif?'':'<span class="badge badge-netral">Nonaktif</span>'}</div>
+          <div class="row-sub">${k.pin_hash? 'PIN aktif':'Tanpa PIN'}</div></div>
+          <button class="btn btn-sm ${k.aktif?'btn-danger':''}" onclick="toggleKasir(${k.id})">${k.aktif?'Nonaktifkan':'Aktifkan'}</button>
+        </div>`).join('')}
+    </div>
+  `;
+}
+async function addKasir(){
+  const nama = document.getElementById('nks-name').value.trim();
+  if(!nama) return toast('Nama kasir wajib diisi','error');
+  const pin = document.getElementById('nks-pin').value.trim();
+  let pin_hash=null, pin_salt=null;
+  if(pin){
+    if(pin.length<4) return toast('PIN minimal 4 digit','error');
+    pin_salt = randomSalt(); pin_hash = await sha256(pin+pin_salt);
+  }
+  DB.kasir.push({id:uid('kasir'), nama, pin_hash, pin_salt, aktif:1});
+  saveDB(); toast('Kasir ditambahkan','ok'); document.getElementById('screen').innerHTML = screenSettingKasir();
+}
+function toggleKasir(id){
+  const k = getKasir(id); k.aktif = k.aktif?0:1; saveDB();
+  document.getElementById('screen').innerHTML = screenSettingKasir();
+}
+
+/* ---------------- IMPORT / EXPORT CSV ---------------- */
+function screenImportExport(){
+  return `
+    <div class="section-title">Export</div>
+    <div class="card">
+      <button class="btn" onclick="exportTransaksiCsv()">Export Transaksi (CSV)</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-outline" onclick="exportAkunCsv()">Export Akun (CSV)</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
+    </div>
+    <div class="section-title">Import Transaksi dari CSV</div>
+    <div class="card">
+      <div class="hint">Kolom wajib: tanggal(YYYY-MM-DD), akun, kategori, jenis, nominal, profit, catatan, status_bayar(lunas/kasbon), nama_pelanggan</div>
+      <div style="height:6px"></div>
+      <button class="btn btn-outline" onclick="downloadTemplateCsv()">Unduh Template CSV</button>
+      <div style="height:10px"></div>
+      <input type="file" id="csv-file" accept=".csv,text/csv">
+      <div style="height:8px"></div>
+      <button class="btn" onclick="importCsv()">Import File CSV</button>
+      <div id="import-result" class="hint"></div>
+    </div>
+  `;
+}
+function csvEscape(v){ v=String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type:mime||'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+function exportTransaksiCsv(){
+  const header = ['tanggal','akun','akun_tujuan','kategori','jenis','flow','nominal','profit','catatan','status_bayar','expense_type'];
+  const rows = DB.transactions.map(t=>[t.tanggal, getAccount(t.account_id)?.name||'', t.target_account_id?getAccount(t.target_account_id)?.name||'':'',
+    t.kategori||'', t.jenis, t.flow, t.amount, t.profit, t.catatan||'', t.payment_status, t.expense_type||'']);
+  const csv = [header, ...rows].map(r=>r.map(csvEscape).join(',')).join('\n');
+  downloadFile('transaksi_export_'+todayStr()+'.csv', csv);
+  toast('Export transaksi berhasil','ok');
+}
+function exportAkunCsv(){
+  const header = ['nama','tipe','saldo_awal','ambang_minimum','saldo_sekarang','aktif'];
+  const rows = DB.accounts.map(a=>[a.name, a.tipe, a.saldo_awal, a.ambang_minimum, getSaldo(a.id), a.aktif?'ya':'tidak']);
+  const csv = [header, ...rows].map(r=>r.map(csvEscape).join(',')).join('\n');
+  downloadFile('akun_export_'+todayStr()+'.csv', csv);
+  toast('Export akun berhasil','ok');
+}
+function backupJson(){
+  downloadFile('backup_kasir_'+todayStr()+'.json', JSON.stringify(DB, null, 2), 'application/json');
+  toast('Backup JSON diunduh','ok');
+}
+function downloadTemplateCsv(){
+  const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
+  const contoh = ['2026-07-20','Kas Laci','Penjualan Barang','Contoh penjualan','50000','10000','','lunas',''];
+  downloadFile('template_import_transaksi.csv', [header,contoh].map(r=>r.map(csvEscape).join(',')).join('\n'));
+}
+function parseCsvLine(line){
+  // ponytail: parser CSV sederhana yang tetap menangani tanda kutip dasar, cukup untuk template ini
+  const out=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(inQ){
+      if(ch==='"' && line[i+1]==='"'){ cur+='"'; i++; }
+      else if(ch==='"'){ inQ=false; }
+      else cur+=ch;
+    } else {
+      if(ch==='"') inQ=true;
+      else if(ch===','){ out.push(cur); cur=''; }
+      else cur+=ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+function importCsv(){
+  const fileInput = document.getElementById('csv-file');
+  const file = fileInput.files[0];
+  if(!file) return toast('Pilih file CSV dulu','error');
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const lines = String(e.target.result).split(/\r?\n/).filter(l=>l.trim().length);
+    if(lines.length<2) return toast('File CSV kosong','error');
+    const header = parseCsvLine(lines[0]).map(h=>h.trim().toLowerCase());
+    let ok=0, fail=0; const errors=[];
+    for(let i=1;i<lines.length;i++){
+      const cols = parseCsvLine(lines[i]);
+      const row = {}; header.forEach((h,idx)=>row[h]=(cols[idx]||'').trim());
+      try{
+        const acc = DB.accounts.find(a=>a.name.toLowerCase()===String(row.akun||'').toLowerCase());
+        if(!acc) throw new Error('akun "'+row.akun+'" tidak ditemukan');
+        let cat = DB.categories.find(c=>c.name.toLowerCase()===String(row.kategori||'').toLowerCase());
+        if(!cat) throw new Error('kategori "'+row.kategori+'" tidak ditemukan');
+        const amount = Number(row.nominal); if(!amount || amount<=0) throw new Error('nominal tidak valid');
+        const isUnpaid = String(row.status_bayar||'').toLowerCase().startsWith('kasbon');
+        if(isUnpaid && !row.nama_pelanggan) throw new Error('nama_pelanggan wajib untuk kasbon');
+        const tanggal = row.tanggal || todayStr();
+        const tx = {id:uid('transactions'), tanggal, account_id:acc.id, target_account_id:null,
+          kategori_id:cat.id, kategori:cat.name, jenis: row.jenis||cat.name, flow:cat.flow,
+          amount, profit: Number(row.profit||0), catatan: row.catatan||'',
+          expense_type: cat.flow==='Pengeluaran' ? 'OPEX' : null,
+          payment_status: isUnpaid?'unpaid':'paid', netral_arah: cat.flow==='Netral'?(cat.arah||'+'):null,
+          kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
+        runAudit(tx);
+        DB.transactions.push(tx);
+        if(isUnpaid) DB.kasbon.push({id:uid('kasbon'), transaction_id:tx.id, nama_pelanggan:row.nama_pelanggan,
+          account_id:acc.id, amount, tanggal, status:'unpaid', tanggal_lunas:null, catatan:row.catatan||''});
+        ok++;
+      }catch(err){ fail++; errors.push('Baris '+(i+1)+': '+err.message); }
+    }
+    saveDB();
+    document.getElementById('import-result').innerHTML = `${ok} baris berhasil, ${fail} gagal.` +
+      (errors.length? '<br>'+errors.slice(0,8).map(esc).join('<br>') : '');
+    toast(`Import selesai: ${ok} berhasil, ${fail} gagal`, fail?'error':'ok');
+  };
+  reader.readAsText(file);
+}
+
+/* ============================ LOCK SCREEN ============================ */
+let lockSelectedKasir = null;
+let lockPin = '';
+function renderLock(){
+  const lock = document.getElementById('lockscreen');
+  lock.style.display = 'flex';
+  if(DB.kasir.length===0){ lock.innerHTML = renderLockSetup(); return; }
+  if(!lockSelectedKasir){ lock.innerHTML = renderLockSelect(); return; }
+  const k = getKasir(lockSelectedKasir);
+  if(!k){ lockSelectedKasir=null; lock.innerHTML = renderLockSelect(); return; }
+  if(!k.pin_hash){ DB.currentKasirId = k.id; saveDB(); lockSelectedKasir=null; render(); return; }
+  lock.innerHTML = renderLockPin(k);
+}
+function renderLockSetup(){
+  return `
+    <div class="lock-inner">
+      <div class="lock-logo">🧾</div>
+      <div class="lock-title">Kasir Front House</div>
+      <div class="lock-sub">Buat kasir pertama untuk mulai</div>
+      <div style="width:100%;max-width:280px;">
+        <input type="text" id="setup-nama" placeholder="Nama kasir" style="margin-bottom:10px;">
+        <input type="text" id="setup-pin" inputmode="numeric" maxlength="6" placeholder="PIN (opsional)"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <div style="height:12px"></div>
+        <button class="btn" onclick="setupFirstKasir()">Mulai</button>
+      </div>
+    </div>`;
+}
+async function setupFirstKasir(){
+  const nama = document.getElementById('setup-nama').value.trim() || 'Admin';
+  const pin = document.getElementById('setup-pin').value.trim();
+  let pin_hash=null, pin_salt=null;
+  if(pin && pin.length>=4){ pin_salt=randomSalt(); pin_hash = await sha256(pin+pin_salt); }
+  const id = uid('kasir');
+  DB.kasir.push({id, nama, pin_hash, pin_salt, aktif:1});
+  DB.currentKasirId = id; saveDB(); render();
+}
+function renderLockSelect(){
+  const kasirs = DB.kasir.filter(k=>k.aktif);
+  return `
+    <div class="lock-inner">
+      <div class="lock-logo">🧾</div>
+      <div class="lock-title">Kasir Front House</div>
+      <div class="lock-sub">Pilih kasir untuk masuk</div>
+      <div class="kasir-tiles">
+        ${kasirs.map(k=>`<button class="kasir-tile" onclick="lockSelectedKasir=${k.id}; renderLock();">
+          <div class="kasir-avatar">${esc(k.nama.slice(0,1).toUpperCase())}</div>
+          <div style="font-size:11.5px;font-weight:700;">${esc(k.nama)}</div>
+        </button>`).join('')}
+      </div>
+    </div>`;
+}
+function renderLockPin(k){
+  const dots = Array.from({length:6}).map((_,i)=>`<div class="pin-dot ${i<lockPin.length?'filled':''}"></div>`).join('');
+  return `
+    <div class="lock-inner">
+      <div class="lock-logo">🔒</div>
+      <div class="lock-title">${esc(k.nama)}</div>
+      <div class="lock-sub">Masukkan PIN</div>
+      <div class="pin-dots">${dots}</div>
+      <div class="pin-keypad">
+        ${['1','2','3','4','5','6','7','8','9'].map(n=>`<button class="pin-key" onclick="pinPress('${n}')">${n}</button>`).join('')}
+        <span></span>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key" onclick="pinPress('back')">⌫</button>
+      </div>
+      <button class="linklike" onclick="lockSelectedKasir=null; lockPin=''; renderLock();">← Ganti Kasir</button>
+    </div>`;
+}
+async function pinPress(k){
+  if(k==='back'){ lockPin = lockPin.slice(0,-1); renderLock(); return; }
+  if(lockPin.length>=6) return;
+  lockPin += k;
+  const kasir = getKasir(lockSelectedKasir);
+  if(lockPin.length >= 4){
+    const hash = await sha256(lockPin + kasir.pin_salt);
+    if(hash === kasir.pin_hash){ DB.currentKasirId = kasir.id; lockSelectedKasir=null; lockPin=''; saveDB(); render(); return; }
+    if(lockPin.length===6 || lockPin.length===kasir.pin_hash.length || true){
+      // beri kesempatan lanjut mengetik sampai batas wajar, cek ulang tiap ketukan
+    }
+  }
+  renderLock();
+  if(lockPin.length>=6){
+    setTimeout(()=>{ toast('PIN salah','error'); lockPin=''; renderLock(); }, 200);
+  }
+}
+
+/* ============================ BOOT ============================ */
+loadDB();
+render();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</body>
+</html>

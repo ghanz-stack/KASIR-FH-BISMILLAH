@@ -1,0 +1,8 @@
+{
+  "appId": "id.co.usahabersamanatar.kasirfronthouse",
+  "appName": "Kasir Front House",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
