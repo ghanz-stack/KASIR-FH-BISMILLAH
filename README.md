@@ -57,4 +57,3 @@ Setelah edit `www/index.html`, jalanin `npx cap copy android` (via
 ikut ke-update — walau workflow CI juga otomatis `cap sync` sebelum build,
 jadi sebenarnya opsional untuk keperluan build, cuma berguna kalau mau test
 lokal di Android Studio.
-# KASIR-FH-BISMILLAH

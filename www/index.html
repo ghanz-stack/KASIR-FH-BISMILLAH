@@ -11,6 +11,7 @@
   --barang:#64748b; --ppob:#06b6d4; --mutasi:#6366f1;
   --danger:#ef4444; --warning:#f59e0b; --success:#10b981;
   --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --fs-mult:1;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
@@ -25,45 +26,45 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
 /* Top bar */
 .topbar{display:flex; align-items:center; gap:10px; padding:12px 14px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
   color:#fff; box-shadow:0 2px 8px rgba(15,118,110,.25); position:relative; z-index:5;}
-.topbar h1{font-size:16px; margin:0; font-weight:700; flex:1;}
+.topbar h1{font-size:calc(16px * var(--fs-mult)); margin:0; font-weight:700; flex:1;}
 .back-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:34px; height:34px; border-radius:10px;
-  font-size:18px; display:flex; align-items:center; justify-content:center;}
-.kasir-chip{font-size:11px; background:rgba(255,255,255,.18); padding:5px 10px; border-radius:20px; white-space:nowrap;}
-.lock-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:10px; font-size:15px;}
+  font-size:calc(18px * var(--fs-mult)); display:flex; align-items:center; justify-content:center;}
+.kasir-chip{font-size:calc(11px * var(--fs-mult)); background:rgba(255,255,255,.18); padding:5px 10px; border-radius:20px; white-space:nowrap;}
+.lock-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:10px; font-size:calc(15px * var(--fs-mult));}
 
 /* Bottom nav */
 .bottomnav{position:fixed; left:0; right:0; bottom:0; display:flex; background:var(--card);
   box-shadow:0 -2px 12px rgba(0,0,0,.08); padding-bottom:env(safe-area-inset-bottom); z-index:10;}
 .navbtn{flex:1; border:none; background:none; padding:9px 2px 8px; display:flex; flex-direction:column;
-  align-items:center; gap:2px; color:var(--muted); font-size:10.5px; font-weight:600;}
+  align-items:center; gap:2px; color:var(--muted); font-size:calc(10.5px * var(--fs-mult)); font-weight:600;}
 .navbtn.active{color:var(--primary);}
-.navbtn .ic{font-size:19px;}
+.navbtn .ic{font-size:calc(19px * var(--fs-mult));}
 
 /* Cards */
 .card{background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .card-hero{background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; border-radius:18px;
   padding:18px; margin-bottom:12px; box-shadow:0 6px 16px rgba(15,118,110,.25);}
-.card-hero .lbl{font-size:12px; opacity:.85; font-weight:600;}
-.card-hero .val{font-size:28px; font-weight:800; margin-top:4px;}
+.card-hero .lbl{font-size:calc(12px * var(--fs-mult)); opacity:.85; font-weight:600;}
+.card-hero .val{font-size:calc(28px * var(--fs-mult)); font-weight:800; margin-top:4px;}
 .card-sub{background:var(--card); border-radius:14px; padding:12px 14px; margin-bottom:12px; border:1px solid var(--border);}
-.card-sub .lbl{font-size:11px; color:var(--muted); font-weight:600;}
-.card-sub .val{font-size:18px; font-weight:700; margin-top:2px;}
+.card-sub .lbl{font-size:calc(11px * var(--fs-mult)); color:var(--muted); font-weight:600;}
+.card-sub .val{font-size:calc(18px * var(--fs-mult)); font-weight:700; margin-top:2px;}
 
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
 
-.section-title{font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;
+.section-title{font-size:calc(13px * var(--fs-mult)); font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;
   margin:14px 0 8px 2px;}
 
 .acc-card{border-radius:14px; padding:12px; color:#fff; position:relative; overflow:hidden; margin-bottom:8px;
   box-shadow:0 3px 8px rgba(0,0,0,.12);}
-.acc-card .name{font-size:13px; font-weight:700;}
-.acc-card .tipe{font-size:10px; opacity:.85;}
-.acc-card .saldo{font-size:17px; font-weight:800; margin-top:6px;}
-.acc-card.low::after{content:"⚠ di bawah ambang"; position:absolute; top:8px; right:10px; font-size:9px;
+.acc-card .name{font-size:calc(13px * var(--fs-mult)); font-weight:700;}
+.acc-card .tipe{font-size:calc(10px * var(--fs-mult)); opacity:.85;}
+.acc-card .saldo{font-size:calc(17px * var(--fs-mult)); font-weight:800; margin-top:6px;}
+.acc-card.low::after{content:"⚠ di bawah ambang"; position:absolute; top:8px; right:10px; font-size:calc(9px * var(--fs-mult));
   background:rgba(0,0,0,.25); padding:2px 6px; border-radius:8px;}
 
-.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700;}
+.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:calc(10.5px * var(--fs-mult)); font-weight:700;}
 .badge-in{background:#d1fae5; color:#065f46;}
 .badge-out{background:#fee2e2; color:#991b1b;}
 .badge-netral{background:#e2e8f0; color:#334155;}
@@ -72,66 +73,66 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
 .badge-locked{background:#e2e8f0; color:#475569;}
 
 .alert-strip{display:flex; gap:8px; overflow-x:auto; margin-bottom:6px; padding-bottom:4px;}
-.alert-chip{flex:0 0 auto; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:11.5px;
+.alert-chip{flex:0 0 auto; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:calc(11.5px * var(--fs-mult));
   font-weight:600; padding:8px 12px; border-radius:12px; white-space:nowrap;}
 .alert-chip.danger{background:#fef2f2; border-color:#fecaca; color:#991b1b;}
 
 .shortcuts{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:6px;}
 .shortcut{display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 2px; border-radius:14px;
-  color:#fff; font-size:10px; font-weight:700; text-align:center;}
-.shortcut .ic{font-size:20px;}
+  color:#fff; font-size:calc(10px * var(--fs-mult)); font-weight:700; text-align:center;}
+.shortcut .ic{font-size:calc(20px * var(--fs-mult));}
 
 /* Buttons */
-.btn{display:block; width:100%; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:700;
+.btn{display:block; width:100%; padding:13px; border:none; border-radius:12px; font-size:calc(15px * var(--fs-mult)); font-weight:700;
   color:#fff; background:var(--primary); position:relative; overflow:hidden;}
 .btn:active{transform:scale(.98);}
 .btn-outline{background:#fff; color:var(--primary); border:1.5px solid var(--primary);}
 .btn-danger{background:var(--danger);}
-.btn-sm{padding:8px 12px; font-size:12.5px; border-radius:9px; width:auto; display:inline-block;}
+.btn-sm{padding:8px 12px; font-size:calc(12.5px * var(--fs-mult)); border-radius:9px; width:auto; display:inline-block;}
 .btn-row{display:flex; gap:8px;}
 .btn-row .btn{flex:1;}
 
 /* Forms */
-label.f{display:block; font-size:12px; font-weight:700; color:var(--muted); margin:12px 0 6px;}
+label.f{display:block; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted); margin:12px 0 6px;}
 input[type=text],input[type=date],input[type=number],select,textarea{
-  width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:11px; font-size:14.5px;
+  width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:11px; font-size:calc(14.5px * var(--fs-mult));
   background:#fff; color:var(--text);}
 textarea{resize:vertical; min-height:56px;}
 .seg{display:flex; flex-wrap:wrap; gap:7px;}
-.seg-btn{padding:9px 13px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-size:13px;
+.seg-btn{padding:9px 13px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-size:calc(13px * var(--fs-mult));
   font-weight:600; color:var(--text);}
 .seg-btn.sel{color:#fff; border-color:transparent;}
-.hint{font-size:11.5px; color:var(--muted); margin-top:4px;}
+.hint{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:4px;}
 
 /* Keypad */
-.amount-display{background:#0f172a; color:#fff; border-radius:14px; padding:16px; text-align:right; font-size:26px;
+.amount-display{background:#0f172a; color:#fff; border-radius:14px; padding:16px; text-align:right; font-size:calc(26px * var(--fs-mult));
   font-weight:800; margin-bottom:10px; letter-spacing:.02em;}
 .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
-.key{padding:15px 0; text-align:center; font-size:19px; font-weight:700; background:#fff; border:1px solid var(--border);
+.key{padding:15px 0; text-align:center; font-size:calc(19px * var(--fs-mult)); font-weight:700; background:#fff; border:1px solid var(--border);
   border-radius:12px;}
 .key:active{background:#f1f5f9;}
-.key.fn{background:#fef2f2; color:var(--danger); font-size:15px;}
+.key.fn{background:#fef2f2; color:var(--danger); font-size:calc(15px * var(--fs-mult));}
 
 /* Rows */
 .row-item{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border);}
 .row-item:last-child{border-bottom:none;}
 .row-dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
 .row-main{flex:1; min-width:0;}
-.row-title{font-size:13.5px; font-weight:700;}
-.row-sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
-.row-amt{font-size:14px; font-weight:800; white-space:nowrap;}
+.row-title{font-size:calc(13.5px * var(--fs-mult)); font-weight:700;}
+.row-sub{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:1px;}
+.row-amt{font-size:calc(14px * var(--fs-mult)); font-weight:800; white-space:nowrap;}
 
 .tabs{display:flex; gap:6px; margin-bottom:12px; background:#e2e8f0; padding:4px; border-radius:12px;}
-.tab{flex:1; text-align:center; padding:8px 4px; border-radius:9px; font-size:12px; font-weight:700; color:var(--muted);}
+.tab{flex:1; text-align:center; padding:8px 4px; border-radius:9px; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted);}
 .tab.sel{background:#fff; color:var(--primary);}
 
 .settings-list a.setting-item{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--border);
-  text-decoration:none; color:var(--text); font-size:14px; font-weight:600; cursor:pointer;}
-.settings-list .ic{font-size:19px; width:26px; text-align:center;}
+  text-decoration:none; color:var(--text); font-size:calc(14px * var(--fs-mult)); font-weight:600; cursor:pointer;}
+.settings-list .ic{font-size:calc(19px * var(--fs-mult)); width:26px; text-align:center;}
 
 /* Toast */
 #toast{position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(20px); background:#0f172a; color:#fff;
-  padding:11px 18px; border-radius:12px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; z-index:100;
+  padding:11px 18px; border-radius:12px; font-size:calc(13px * var(--fs-mult)); font-weight:600; opacity:0; pointer-events:none; z-index:100;
   transition:all .25s ease; max-width:88%; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.25);}
 #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
@@ -139,25 +140,25 @@ textarea{resize:vertical; min-height:56px;}
 #lockscreen{position:fixed; inset:0; background:linear-gradient(160deg,var(--primary-dark),var(--primary)); z-index:200;
   display:flex; flex-direction:column; color:#fff; padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom);}
 .lock-inner{flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px 0;}
-.lock-logo{font-size:44px; margin-bottom:6px;}
-.lock-title{font-size:19px; font-weight:800; margin-bottom:2px;}
-.lock-sub{font-size:12.5px; opacity:.8; margin-bottom:22px;}
+.lock-logo{font-size:calc(44px * var(--fs-mult)); margin-bottom:6px;}
+.lock-title{font-size:calc(19px * var(--fs-mult)); font-weight:800; margin-bottom:2px;}
+.lock-sub{font-size:calc(12.5px * var(--fs-mult)); opacity:.8; margin-bottom:22px;}
 .kasir-tiles{display:flex; flex-wrap:wrap; gap:12px; justify-content:center;}
 .kasir-tile{width:84px; display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; background:rgba(255,255,255,.12);
   padding:12px 6px; border-radius:14px; border:none;}
 .kasir-avatar{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center;
-  justify-content:center; font-weight:800; font-size:17px;}
+  justify-content:center; font-weight:800; font-size:calc(17px * var(--fs-mult));}
 .pin-dots{display:flex; gap:12px; margin:18px 0;}
 .pin-dot{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6);}
 .pin-dot.filled{background:#fff;}
 .pin-keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:240px;}
-.pin-key{padding:16px 0; text-align:center; font-size:20px; font-weight:700; background:rgba(255,255,255,.12); border:none;
+.pin-key{padding:16px 0; text-align:center; font-size:calc(20px * var(--fs-mult)); font-weight:700; background:rgba(255,255,255,.12); border:none;
   border-radius:50%; color:#fff; width:64px; height:64px; justify-self:center;}
 .pin-key:active{background:rgba(255,255,255,.28);}
-.linklike{color:#fff; text-decoration:underline; font-size:12.5px; opacity:.85; background:none; border:none; margin-top:14px;}
+.linklike{color:#fff; text-decoration:underline; font-size:calc(12.5px * var(--fs-mult)); opacity:.85; background:none; border:none; margin-top:14px;}
 
 .empty-state{text-align:center; padding:40px 10px; color:var(--muted);}
-.empty-state .ic{font-size:38px; margin-bottom:8px;}
+.empty-state .ic{font-size:calc(38px * var(--fs-mult)); margin-bottom:8px;}
 
 .ripple{position:relative;}
 </style>
@@ -210,20 +211,37 @@ function toast(msg, type){
 }
 
 function seedIfEmpty(){
-  DB.accounts.push(
-    {id:uid('accounts'), name:'Kas Laci', tipe:'cash', saldo_awal:500000, ambang_minimum:100000, aktif:1},
-    {id:uid('accounts'), name:'DANA', tipe:'ewallet', saldo_awal:1000000, ambang_minimum:200000, aktif:1},
-    {id:uid('accounts'), name:'BCA', tipe:'bank', saldo_awal:2000000, ambang_minimum:300000, aktif:1},
-    {id:uid('accounts'), name:'Deposit H2H', tipe:'ppob_server', saldo_awal:1500000, ambang_minimum:500000, aktif:1}
-  );
+  const acc = (name, tipe) => { const id = uid('accounts'); DB.accounts.push({id, name, tipe, saldo_awal:0, ambang_minimum:0, aktif:1}); return id; };
+  const cat = (name, account_ids) => { DB.categories.push({id:uid('categories'), name, flow:'Pemasukan', account_ids}); };
+
+  const dana = [1,2,3,4].map(n=>acc('DANA '+n, 'ewallet'));
+  const seaBank = acc('Sea Bank', 'bank');
+  const shopeepay = acc('Shopeepay', 'ewallet');
+  const saveplus = acc('Saveplus', 'ppob_server');
+  const fastpay = acc('Fastpay', 'ppob_server');
+  const mandiri = acc('Mandiri', 'bank');
+  const cash = acc('Cash', 'cash');
+  const voucherFisik = acc('Voucher Fisik', 'voucher');
+  const barang = acc('Barang', 'barang');
+
+  ['Tarik','Setor','Transfer','Lainnya'].forEach(n=>cat(n, dana));
+  ['Tarik','Setor','Transfer','Lainnya'].forEach(n=>cat(n, [seaBank]));
+  ['Transfer','Listrik','BRI VA','Gopay','Lainnya'].forEach(n=>cat(n, [shopeepay]));
+  ['Paket Data','Pulsa','Lainnya'].forEach(n=>cat(n, [saveplus]));
+  ['EDC','Topup','Paket Data','Pulsa','Lainnya'].forEach(n=>cat(n, [fastpay]));
+  ['Transfer','Setor','Tarik Tunai','Lainnya'].forEach(n=>cat(n, [mandiri]));
+  ['Tarik','Setor'].forEach(n=>cat(n, [cash]));
+  ['Paket Data & Perdana','Telkomsel','Tri','Indosat','Axis','Smartfren','XL'].forEach(n=>cat(n, [voucherFisik]));
+  ['Kabel','Charger','Mainan','Tempered Glass','Casing','Lainnya'].forEach(n=>cat(n, [barang]));
+
+  // kategori umum, berlaku lintas akun (account_ids null = global)
   DB.categories.push(
-    {id:uid('categories'), name:'Penjualan Pulsa/PPOB', flow:'Pemasukan'},
-    {id:uid('categories'), name:'Penjualan Barang', flow:'Pemasukan'},
-    {id:uid('categories'), name:'Belanja Stok', flow:'Pengeluaran'},
-    {id:uid('categories'), name:'Biaya Operasional', flow:'Pengeluaran'},
-    {id:uid('categories'), name:'Setoran Pemilik', flow:'Netral', arah:'+'},
-    {id:uid('categories'), name:'Ambil Pribadi (Prive)', flow:'Netral', arah:'-'}
+    {id:uid('categories'), name:'Belanja Stok', flow:'Pengeluaran', account_ids:null},
+    {id:uid('categories'), name:'Biaya Operasional', flow:'Pengeluaran', account_ids:null},
+    {id:uid('categories'), name:'Setoran Pemilik', flow:'Netral', arah:'+', account_ids:null},
+    {id:uid('categories'), name:'Ambil Pribadi (Prive)', flow:'Netral', arah:'-', account_ids:null}
   );
+
   DB.kasir.push({id:uid('kasir'), nama:'Admin', pin_hash:null, pin_salt:null, aktif:1});
 }
 
@@ -238,6 +256,9 @@ function loadDB(){
   }
   if(!DB.closings) DB.closings=[];
   if(!DB.nextId.closings) DB.nextId.closings=1;
+  if(!DB.settings) DB.settings = {fontScale:'regular'};
+  if(!DB.settings.fontScale) DB.settings.fontScale = 'regular';
+  applyFontScale();
 }
 function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
 
@@ -442,7 +463,7 @@ function screenDashboard(){
 
     <div class="section-title">Saldo Akun</div>
     ${Object.keys(byTipe).map(tipe=>`
-      <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin:8px 0 4px 2px;">${ACC_LABEL[tipe]}</div>
+      <div style="font-size:calc(11.5px * var(--fs-mult));font-weight:700;color:var(--muted);margin:8px 0 4px 2px;">${ACC_LABEL[tipe]}</div>
       ${byTipe[tipe].map(a=>{
         const s = getSaldo(a.id); const low = s < a.ambang_minimum;
         return `<div class="acc-card ${low?'low':''}" style="background:${ACC_COLOR[tipe]}">
@@ -478,9 +499,17 @@ function renderKeypad(){
 
 /* ---------------- INPUT TRANSAKSI ---------------- */
 let inputState = {account_id:null, category_id:null, payment_status:'paid'};
-function screenInput(){
-  kpValue = '0';
-  inputState = {account_id: activeAccounts()[0]?.id||null, category_id: DB.categories[0]?.id||null, payment_status:'paid'};
+function inputCategoriesFor(accountId){
+  return DB.categories.filter(c=>!c.account_ids || c.account_ids.includes(accountId));
+}
+function screenInput(fresh){
+  if(fresh!==false){
+    kpValue = '0';
+    inputState = {account_id: activeAccounts()[0]?.id||null, category_id:null, payment_status:'paid'};
+    const firstCats = inputCategoriesFor(inputState.account_id);
+    inputState.category_id = firstCats[0]?.id || null;
+  }
+  const cats = inputCategoriesFor(inputState.account_id);
   const cat = getCategory(inputState.category_id);
   return `
     <label class="f">Akun</label>
@@ -492,9 +521,9 @@ function screenInput(){
 
     <label class="f">Kategori</label>
     <div class="seg" id="cat-seg">
-      ${DB.categories.map(c=>`<button type="button" class="seg-btn ${c.id===inputState.category_id?'sel':''}"
+      ${cats.map(c=>`<button type="button" class="seg-btn ${c.id===inputState.category_id?'sel':''}"
         style="${c.id===inputState.category_id?`background:${flowColor(c.flow)}`:''}"
-        onclick="selInputCategory(${c.id})">${esc(c.name)}</button>`).join('') || '<div class="hint">Belum ada kategori. Tambah di Setting.</div>'}
+        onclick="selInputCategory(${c.id})">${esc(c.name)}</button>`).join('') || '<div class="hint">Akun ini belum punya kategori. Tambah di Setting.</div>'}
     </div>
     <div id="flow-badge">${cat? flowBadge(cat.flow) : ''}</div>
 
@@ -541,7 +570,12 @@ function flowBadge(flow){
   const cls = flow==='Pemasukan'?'badge-in':flow==='Pengeluaran'?'badge-out':'badge-netral';
   return `<span class="badge ${cls}">${flow}</span>`;
 }
-function selInputAccount(id){ inputState.account_id=id; rerenderInputPartial(); }
+function selInputAccount(id){
+  inputState.account_id=id;
+  const cats = inputCategoriesFor(id);
+  if(!cats.find(c=>c.id===inputState.category_id)) inputState.category_id = cats[0]?.id || null;
+  rerenderInputPartial();
+}
 function selInputCategory(id){ inputState.category_id=id; rerenderInputPartial(); }
 function selExpenseType(t){ window._expenseType=t;
   document.getElementById('et-cogs').classList.toggle('sel', t==='COGS');
@@ -558,7 +592,7 @@ function selPaymentStatus(s){ inputState.payment_status=s;
 }
 function rerenderInputPartial(){
   const keep = kpValue;
-  document.getElementById('screen').innerHTML = screenInput();
+  document.getElementById('screen').innerHTML = screenInput(false);
   kpValue = keep;
   const disp = document.getElementById('kp-display'); if(disp) disp.textContent = fmtRp(kpValue);
 }
@@ -606,11 +640,13 @@ function submitTransaksi(){
 
 /* ---------------- TRANSFER / PINDAH SALDO ---------------- */
 let transferState = {source:null, target:null};
-function screenTransfer(){
-  kpValue = '0';
+function screenTransfer(fresh){
   const accs = activeAccounts();
-  transferState.source = accs[0]?.id || null;
-  transferState.target = accs[1]?.id || accs[0]?.id || null;
+  if(fresh!==false){
+    kpValue = '0';
+    transferState.source = accs[0]?.id || null;
+    transferState.target = accs[1]?.id || accs[0]?.id || null;
+  }
   return `
     <label class="f">Akun Asal</label>
     <div class="seg" id="src-seg">
@@ -646,10 +682,10 @@ function transferPreviewHtml(){
   const sBefore = getSaldo(sAcc.id), tBefore = getSaldo(tAcc.id);
   return `
     <div class="lbl">PREVIEW SALDO</div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;">
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:calc(12.5px * var(--fs-mult));">
       <span>${esc(sAcc.name)}: ${fmtRp(sBefore)} → <b style="color:var(--danger)">${fmtRp(sBefore-amt)}</b></span>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:12.5px;">
+    <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:calc(12.5px * var(--fs-mult));">
       <span>${esc(tAcc.name)}: ${fmtRp(tBefore)} → <b style="color:var(--success)">${fmtRp(tBefore+amt)}</b></span>
     </div>
     ${amt > sBefore ? '<div class="hint" style="color:var(--danger)">Nominal melebihi saldo akun asal.</div>':''}
@@ -659,7 +695,7 @@ function selTransferSrc(id){ transferState.source=id; rerenderTransferPartial();
 function selTransferTgt(id){ transferState.target=id; rerenderTransferPartial(); }
 function rerenderTransferPartial(){
   const keep = kpValue;
-  document.getElementById('screen').innerHTML = screenTransfer();
+  document.getElementById('screen').innerHTML = screenTransfer(false);
   kpValue = keep;
   const disp = document.getElementById('kp-display'); if(disp) disp.textContent = fmtRp(kpValue);
   const pv = document.getElementById('transfer-preview'); if(pv) pv.innerHTML = transferPreviewHtml();
@@ -734,7 +770,7 @@ function screenTxDetail(){
   return `
     <div class="card">
       <div class="section-title" style="margin-top:0">${t.flow}</div>
-      <div style="font-size:19px;font-weight:800;margin-bottom:10px;">${fmtRp(t.amount)}</div>
+      <div style="font-size:calc(19px * var(--fs-mult));font-weight:800;margin-bottom:10px;">${fmtRp(t.amount)}</div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Tanggal</div><div class="row-title">${t.tanggal}</div></div></div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Akun</div><div class="row-title">${esc(acc?acc.name:'-')}${t.target_account_id?' → '+esc(getAccount(t.target_account_id)?.name||'-'):''}</div></div></div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Kategori / Deskripsi</div><div class="row-title">${esc(t.kategori||'-')} — ${esc(t.jenis)}</div></div></div>
@@ -882,14 +918,14 @@ function screenLaporan(){
       <div class="row-item"><div class="row-main"><div class="row-title">Pendapatan Riil (profit)</div></div><div class="row-amt" style="color:var(--success)">${fmtRp(pendapatan)}</div></div>
       <div class="row-item"><div class="row-main"><div class="row-title">Harga Pokok (COGS)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(cogs)}</div></div>
       <div class="row-item"><div class="row-main"><div class="row-title">Beban Operasional (OPEX)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:15px">Laba Bersih</div></div><div class="row-amt" style="font-size:16px;color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmtRp(netProfit)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:calc(15px * var(--fs-mult))">Laba Bersih</div></div><div class="row-amt" style="font-size:calc(16px * var(--fs-mult));color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmtRp(netProfit)}</div></div>
     </div>
 
     <div class="section-title">Margin per Kategori (bulan ini)</div>
     <div class="card">
       ${Object.keys(perKategori).length? Object.entries(perKategori).map(([k,v])=>`
         <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;">
+          <div style="display:flex;justify-content:space-between;font-size:calc(12.5px * var(--fs-mult));font-weight:700;">
             <span>${esc(k)}</span><span>${fmtRp(v.amount)} <span style="color:var(--muted);font-weight:500;">(profit ${fmtRp(v.profit)})</span></span>
           </div>
           <div style="background:#e2e8f0;border-radius:8px;height:8px;margin-top:4px;">
@@ -931,7 +967,18 @@ function screenAudit(){
 
 /* ---------------- SETTING HOME ---------------- */
 function screenSettingHome(){
+  const scale = DB.settings.fontScale;
+  const FS = [['small','Small'],['regular','Regular'],['medium','Medium'],['large','Large']];
   return `
+    <div class="section-title" style="margin-top:0">Ukuran Font</div>
+    <div class="card">
+      <div class="seg">
+        ${FS.map(([id,label])=>`<button type="button" class="seg-btn ${scale===id?'sel':''}"
+          style="${scale===id?`background:${'var(--primary)'}`:''}"
+          onclick="setFontScale('${id}')">${label}</button>`).join('')}
+      </div>
+      <div class="hint">Mengubah ukuran teks di seluruh aplikasi. Tersimpan otomatis.</div>
+    </div>
     <div class="card settings-list" style="padding:6px 4px;">
       <a class="setting-item" onclick="navigate('settingAkun')"><span class="ic">🏦</span>Kelola Akun</a>
       <a class="setting-item" onclick="navigate('settingKategori')"><span class="ic">🏷️</span>Kelola Kategori</a>
@@ -944,6 +991,17 @@ function screenSettingHome(){
     </div>
     <div class="hint" style="text-align:center;margin-top:8px;">Kasir Front House · v3-web · data tersimpan lokal di perangkat ini</div>
   `;
+}
+const FONT_SCALE_MULT = {small:0.85, regular:1, medium:1.15, large:1.3};
+function applyFontScale(){
+  document.documentElement.style.setProperty('--fs-mult', FONT_SCALE_MULT[DB.settings.fontScale] || 1);
+}
+function setFontScale(level){
+  if(!FONT_SCALE_MULT[level]) return;
+  DB.settings.fontScale = level;
+  saveDB();
+  applyFontScale();
+  document.getElementById('screen').innerHTML = screenSettingHome();
 }
 
 /* ---------------- KELOLA AKUN ---------------- */
@@ -1017,7 +1075,8 @@ function screenSettingKategori(){
       ${DB.categories.map(c=>`
         <div class="row-item">
           <div class="row-main"><div class="row-title">${esc(c.name)}</div>
-            <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}</div></div>
+            <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}
+            · ${c.account_ids? esc(c.account_ids.map(id=>getAccount(id)?.name||'-').join(', ')) : 'Semua akun'}</div></div>
           <button class="btn btn-sm btn-danger" onclick="deleteKategori(${c.id})">Hapus</button>
         </div>`).join('') || '<div class="empty-state">Belum ada kategori.</div>'}
     </div>
@@ -1255,7 +1314,7 @@ function renderLockSelect(){
       <div class="kasir-tiles">
         ${kasirs.map(k=>`<button class="kasir-tile" onclick="lockSelectedKasir=${k.id}; renderLock();">
           <div class="kasir-avatar">${esc(k.nama.slice(0,1).toUpperCase())}</div>
-          <div style="font-size:11.5px;font-weight:700;">${esc(k.nama)}</div>
+          <div style="font-size:calc(11.5px * var(--fs-mult));font-weight:700;">${esc(k.nama)}</div>
         </button>`).join('')}
       </div>
     </div>`;
