@@ -256,6 +256,7 @@ function loadDB(){
   }
   if(!DB.closings) DB.closings=[];
   if(!DB.nextId.closings) DB.nextId.closings=1;
+  DB.categories.forEach(c=>{ if(c.aktif===undefined) c.aktif=1; });
   if(!DB.settings) DB.settings = {fontScale:'regular'};
   if(!DB.settings.fontScale) DB.settings.fontScale = 'regular';
   applyFontScale();
@@ -273,7 +274,10 @@ function getLatestClosing(accountId){
   const list = DB.closings.filter(c=>c.account_id===accountId).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
   return list[0] || null;
 }
-function getSaldo(accountId){
+function getSaldo(accountId){ return getSaldoAsOf(accountId, todayStr()); }
+/* saldo per posisi akhir tanggal tertentu (dipakai Tutup Kasir susulan agar transaksi
+   SETELAH tanggal yang ditutup tidak ikut kehitung/kekunci) */
+function getSaldoAsOf(accountId, tanggal){
   const acc = getAccount(accountId); if(!acc) return 0;
   const closing = getLatestClosing(accountId);
   let base = closing ? closing.saldo_fisik : acc.saldo_awal;
@@ -281,6 +285,7 @@ function getSaldo(accountId){
   let total = base;
   for(const tx of DB.transactions){
     if(afterDate && tx.tanggal <= afterDate) continue;
+    if(tx.tanggal > tanggal) continue; // exclude transaksi setelah tanggal yang dihitung
     if(tx.payment_status === 'unpaid') continue; // kasbon: belum masuk kas riil
     if(tx.account_id===accountId){
       if(tx.flow==='Pemasukan') total += tx.amount;
@@ -293,6 +298,20 @@ function getSaldo(accountId){
     }
   }
   return total;
+}
+function addDays(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10);
+}
+/* tanggal default yang harus ditutup untuk akun ini: hari tertua yang masih belum
+   dikunci sejak closing terakhir (memaksa penutupan berurutan, tidak boleh loncat) */
+function defaultClosingDate(accountId){
+  const closing = getLatestClosing(accountId);
+  const dates = DB.transactions
+    .filter(t=>!t.locked && (t.account_id===accountId || t.target_account_id===accountId))
+    .map(t=>t.tanggal)
+    .filter(d=> !closing || d>closing.tanggal)
+    .sort();
+  return dates[0] || todayStr();
 }
 
 /* ---------- audit ---------- */
@@ -374,7 +393,8 @@ function renderTopbar(screen){
   const titles = {dashboard:'🏠 Dashboard', input:'➕ Input Transaksi', transfer:'🔁 Pindah Saldo', riwayat:'📜 Riwayat',
     setting:'⚙️ Pengaturan', kasbon:'💰 Kasbon', tutupkasir:'⛔ Tutup Kasir', laporan:'📝 Laporan', audit:'📃 Audit Log',
     settingAkun:'🧍 Kelola Akun', settingKategori:'📎 Kelola Kategori', settingKasir:'💻 Kelola Kasir & PIN',
-    settingImportExport:'📕 Import / Export CSV', settingFont:'⚡ Ukuran Font', txDetail:'💹 Detail Transaksi'};
+    settingImportExport:'📕 Import / Export CSV', settingFont:'⚡ Ukuran Font', txDetail:'💹 Detail Transaksi',
+    editTx:'✏️ Edit Transaksi'};
   const isRoot = TABS.includes(screen);
   const kasir = getKasir(DB.currentKasirId);
   return `
@@ -401,6 +421,7 @@ function renderScreen(screen){
   switch(screen){
     case 'dashboard': return screenDashboard();
     case 'input': return screenInput();
+    case 'editTx': return screenInput(false);
     case 'transfer': return screenTransfer();
     case 'riwayat': return screenRiwayat();
     case 'setting': return screenSettingHome();
@@ -501,10 +522,11 @@ function renderKeypad(){
 /* ---------------- INPUT TRANSAKSI ---------------- */
 let inputState = {account_id:null, category_id:null, payment_status:'paid'};
 function inputCategoriesFor(accountId){
-  return DB.categories.filter(c=>!c.account_ids || c.account_ids.includes(accountId));
+  return DB.categories.filter(c=>c.aktif!==0 && (!c.account_ids || c.account_ids.includes(accountId)));
 }
 function screenInput(fresh){
   if(fresh!==false){
+    editingTxId = null;
     kpValue = '0';
     inputState = {account_id: activeAccounts()[0]?.id||null, category_id:null, payment_status:'paid'};
     const firstCats = inputCategoriesFor(inputState.account_id);
@@ -562,7 +584,7 @@ function screenInput(fresh){
     </div>
 
     <div style="height:16px"></div>
-    <button class="btn" onclick="submitTransaksi()">Simpan Transaksi</button>
+    <button class="btn" onclick="submitTransaksi()">${editingTxId? 'Perbarui Transaksi' : 'Simpan Transaksi'}</button>
   `;
 }
 window._expenseType = 'COGS';
@@ -616,6 +638,32 @@ function submitTransaksi(){
     if(!pelanggan) return toast('Isi nama pelanggan untuk transaksi kasbon','error');
     if(cat.flow!=='Pemasukan') return toast('Kasbon hanya berlaku untuk transaksi Pemasukan','error');
   }
+  // ---- mode EDIT: perbarui transaksi yang sudah ada, bukan buat baru ----
+  if(editingTxId){
+    const orig = DB.transactions.find(x=>x.id===editingTxId);
+    if(!orig || orig.locked){
+      toast('Transaksi sudah terkunci (Tutup Kasir), tidak bisa diedit lagi','error');
+      editingTxId = null; return navigate('riwayat');
+    }
+    Object.assign(orig, {
+      account_id: acc.id, kategori_id: cat.id, kategori: cat.name, jenis, flow: cat.flow, amount, profit,
+      catatan, expense_type: cat.flow==='Pengeluaran' ? window._expenseType : null,
+      payment_status: paymentStatus, netral_arah: cat.flow==='Netral' ? (cat.arah||'+') : null,
+    });
+    runAudit(orig);
+    DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==orig.id);
+    if(paymentStatus==='unpaid'){
+      DB.kasbon.push({id:uid('kasbon'), transaction_id:orig.id, nama_pelanggan:pelanggan, account_id:acc.id,
+        amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan});
+    }
+    saveDB();
+    const backId = orig.id; editingTxId = null;
+    toast(orig.flag_suspect ? 'Diperbarui, tapi ditandai audit: '+orig.suspect_reasons : 'Transaksi diperbarui', orig.flag_suspect?'error':'ok');
+    navigate('txDetail', {id: backId});
+    return;
+  }
+
+  // ---- mode BARU ----
   // cek lock: akun sudah ditutup-kasir untuk tanggal hari ini?
   const closing = getLatestClosing(acc.id);
   const today = todayStr();
@@ -781,9 +829,22 @@ function screenTxDetail(){
       ${t.catatan? `<div class="row-item"><div class="row-main"><div class="row-sub">Catatan</div><div class="row-title">${esc(t.catatan)}</div></div></div>`:''}
       ${t.flag_suspect? `<div class="row-item"><div class="row-main"><div class="row-sub" style="color:var(--danger)">Ditandai Audit</div><div class="row-title">${esc(t.suspect_reasons)}</div></div></div>`:''}
       ${t.locked? `<div class="hint" style="color:var(--danger);margin-top:6px;">🔒 Terkunci — sudah masuk periode Tutup Kasir, tidak bisa diubah/dihapus. Buat transaksi penyesuaian baru jika perlu koreksi.</div>`
-        : `<div class="btn-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="deleteTx(${t.id})">Hapus Transaksi</button></div>`}
+        : `<div class="btn-row" style="margin-top:14px;gap:8px;">
+             <button class="btn" style="background:var(--primary)" onclick="startEditTx(${t.id})">Edit Transaksi</button>
+             <button class="btn btn-danger" onclick="deleteTx(${t.id})">Hapus Transaksi</button>
+           </div>`}
     </div>
   `;
+}
+let editingTxId = null;
+function startEditTx(id){
+  const t = DB.transactions.find(x=>x.id===id);
+  if(!t || t.locked) return toast('Transaksi terkunci, tidak bisa diedit','error');
+  editingTxId = id;
+  kpValue = String(t.amount);
+  inputState = {account_id: t.account_id, category_id: t.kategori_id, payment_status: t.payment_status};
+  window._expenseType = t.expense_type || 'COGS';
+  navigate('editTx');
 }
 function deleteTx(id){
   const t = DB.transactions.find(x=>x.id===id);
@@ -844,23 +905,33 @@ function lunasiKasbon(id){
 
 /* ---------------- TUTUP KASIR ---------------- */
 let closingAccId = null;
+let closingTanggal = null;
 function screenTutupKasir(){
   closingAccId = closingAccId || activeAccounts()[0]?.id;
+  if(!closingTanggal) closingTanggal = defaultClosingDate(closingAccId);
   const acc = getAccount(closingAccId);
-  const saldoSistem = acc? getSaldo(acc.id) : 0;
-  const relatedKasbon = DB.kasbon.filter(k=>k.status==='unpaid' && k.account_id===closingAccId && k.tanggal===todayStr());
+  const lastClosing = getLatestClosing(closingAccId);
+  const minDate = lastClosing ? addDays(lastClosing.tanggal, 1) : null;
+  const today = todayStr();
+  const saldoSistem = acc? getSaldoAsOf(acc.id, closingTanggal) : 0;
+  const isBackfill = closingTanggal < today;
+  const relatedKasbon = DB.kasbon.filter(k=>k.status==='unpaid' && k.account_id===closingAccId && k.tanggal===closingTanggal);
   return `
     <label class="f">Pilih Akun</label>
     <div class="seg">
       ${activeAccounts().map(a=>`<button type="button" class="seg-btn ${a.id===closingAccId?'sel':''}"
         style="${a.id===closingAccId?`background:${ACC_COLOR[a.tipe]}`:''}"
-        onclick="closingAccId=${a.id}; document.getElementById('screen').innerHTML=screenTutupKasir();">${esc(a.name)}</button>`).join('')}
+        onclick="closingAccId=${a.id}; closingTanggal=null; document.getElementById('screen').innerHTML=screenTutupKasir();">${esc(a.name)}</button>`).join('')}
     </div>
+    <label class="f">Tanggal Tutup Kasir</label>
+    <input type="date" id="f-closing-tanggal" value="${closingTanggal}" max="${today}" ${minDate?`min="${minDate}"`:''}
+      onchange="closingTanggal=this.value; document.getElementById('screen').innerHTML=screenTutupKasir();">
+    ${isBackfill? `<div class="hint" style="color:var(--warning)">⚠ Ini penutupan susulan untuk tanggal lampau (lupa tutup kemarin). Saldo sistem di bawah dihitung sampai akhir <b>${closingTanggal}</b> saja — transaksi setelah tanggal ini (termasuk yang sudah Anda input hari ini) TIDAK ikut dihitung maupun ikut terkunci.</div>` : ''}
     <div class="card-sub">
-      <div class="lbl">SALDO SISTEM SAAT INI</div>
+      <div class="lbl">SALDO SISTEM PER AKHIR ${esc(closingTanggal)}</div>
       <div class="val">${fmtRp(saldoSistem)}</div>
     </div>
-    ${relatedKasbon.length? `<div class="hint" style="color:var(--warning)">Ada ${relatedKasbon.length} kasbon belum lunas hari ini terkait akun ini — selisih terkait ini tidak otomatis dianggap kecurangan.</div>`:''}
+    ${relatedKasbon.length? `<div class="hint" style="color:var(--warning)">Ada ${relatedKasbon.length} kasbon belum lunas pada tanggal ini terkait akun ini — selisih terkait ini tidak otomatis dianggap kecurangan.</div>`:''}
     <label class="f">Saldo Fisik (hasil hitung nyata)</label>
     <input type="text" id="f-saldofisik" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)"
       oninput="this.value=this.value.replace(/[^0-9]/g,''); updateSelisihPreview(${saldoSistem})">
@@ -868,7 +939,7 @@ function screenTutupKasir(){
     <label class="f">Catatan (opsional)</label>
     <textarea id="f-closing-catatan" onfocus="scrollToMe(this)"></textarea>
     <div style="height:10px"></div>
-    <button class="btn btn-danger" onclick="submitClosing(${saldoSistem})">Tutup Kasir Akun Ini</button>
+    <button class="btn btn-danger" onclick="submitClosing(${saldoSistem})">Tutup Kasir Akun Ini — ${esc(closingTanggal)}</button>
   `;
 }
 function updateSelisihPreview(saldoSistem){
@@ -879,17 +950,21 @@ function updateSelisihPreview(saldoSistem){
   el.textContent = 'Selisih: ' + fmtRp(selisih) + (selisih===0? ' (sesuai)' : selisih>0 ? ' (lebih)' : ' (kurang)');
 }
 function submitClosing(saldoSistem){
+  const tanggal = closingTanggal;
+  const lastClosing = getLatestClosing(closingAccId);
+  if(lastClosing && tanggal<=lastClosing.tanggal) return toast('Tanggal ini sudah pernah ditutup kasir','error');
+  if(tanggal>todayStr()) return toast('Tidak bisa menutup kasir untuk tanggal yang belum terjadi','error');
   const fisik = Number(document.getElementById('f-saldofisik').value||0);
   const catatan = document.getElementById('f-closing-catatan').value.trim();
   const selisih = fisik - saldoSistem;
-  if(!confirm('Tutup kasir untuk akun ini? Semua transaksi hari ini & sebelumnya pada akun ini akan terkunci permanen.')) return;
-  DB.closings.push({id:uid('closings'), tanggal: todayStr(), account_id: closingAccId, saldo_sistem: saldoSistem,
+  if(!confirm('Tutup kasir untuk akun ini pada tanggal '+tanggal+'? Semua transaksi tanggal itu & sebelumnya pada akun ini akan terkunci permanen.')) return;
+  DB.closings.push({id:uid('closings'), tanggal, account_id: closingAccId, saldo_sistem: saldoSistem,
     saldo_fisik: fisik, selisih, catatan, waktu_tutup: nowIso()});
-  const today = todayStr();
   DB.transactions.forEach(t=>{
-    if((t.account_id===closingAccId || t.target_account_id===closingAccId) && t.tanggal<=today) t.locked=1;
+    if((t.account_id===closingAccId || t.target_account_id===closingAccId) && t.tanggal<=tanggal) t.locked=1;
   });
   saveDB();
+  closingTanggal = null;
   toast(selisih===0? 'Kasir ditutup, saldo sesuai' : 'Kasir ditutup, ada selisih '+fmtRp(selisih), selisih===0?'ok':'error');
   navigate('dashboard');
 }
@@ -1011,6 +1086,7 @@ function setFontScale(level){
 }
 
 /* ---------------- KELOLA AKUN ---------------- */
+let editingAkunId = null;
 function screenSettingAkun(){
   return `
     <div class="card">
@@ -1020,7 +1096,6 @@ function screenSettingAkun(){
       <select id="na-tipe">
         ${Object.entries(ACC_LABEL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
       </select>
-      <div class="hint">Tipe akun tidak bisa diubah setelah dibuat.</div>
       <label class="f">Saldo Awal</label>
       <input type="text" id="na-saldo" inputmode="numeric" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       <label class="f">Ambang Minimum (peringatan)</label>
@@ -1030,15 +1105,51 @@ function screenSettingAkun(){
     </div>
     <div class="section-title">Daftar Akun</div>
     <div class="card" style="padding:6px 14px;">
-      ${DB.accounts.map(a=>`
-        <div class="row-item">
-          <div class="row-dot" style="background:${ACC_COLOR[a.tipe]}"></div>
-          <div class="row-main"><div class="row-title">${esc(a.name)} ${a.aktif?'':'<span class="badge badge-netral">Nonaktif</span>'}</div>
-          <div class="row-sub">${ACC_LABEL[a.tipe]} · saldo skrg ${fmtRp(getSaldo(a.id))}</div></div>
-          <button class="btn btn-sm ${a.aktif?'btn-danger':''}" onclick="toggleAkun(${a.id})">${a.aktif?'Nonaktifkan':'Aktifkan'}</button>
-        </div>`).join('') || '<div class="empty-state">Belum ada akun.</div>'}
+      ${DB.accounts.map(a=> a.id===editingAkunId ? renderAkunEditRow(a) : renderAkunRow(a)).join('') || '<div class="empty-state">Belum ada akun.</div>'}
     </div>
   `;
+}
+function renderAkunRow(a){
+  return `
+    <div class="row-item">
+      <div class="row-dot" style="background:${ACC_COLOR[a.tipe]}"></div>
+      <div class="row-main"><div class="row-title">${esc(a.name)} ${a.aktif?'':'<span class="badge badge-netral">Nonaktif</span>'}</div>
+      <div class="row-sub">${ACC_LABEL[a.tipe]} · ambang ${fmtRp(a.ambang_minimum)} · saldo skrg ${fmtRp(getSaldo(a.id))}</div></div>
+      <div class="btn-row" style="gap:10px">
+        <button class="btn btn-sm" onclick="editingAkunId=${a.id}; document.getElementById('screen').innerHTML=screenSettingAkun();"> ✎ </button>
+        <button class="btn btn-sm ${a.aktif?'btn-danger':''}" onclick="toggleAkun(${a.id})">${a.aktif?' 🔐 ':' 🔓 '}</button>
+      </div>
+    </div>`;
+}
+function renderAkunEditRow(a){
+  return `
+    <div class="row-item" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <label class="f" style="margin-top:0">Nama Akun</label>
+      <input type="text" id="ea-name-${a.id}" value="${esc(a.name)}">
+      <label class="f">Tipe Akun</label>
+      <select id="ea-tipe-${a.id}">
+        ${Object.entries(ACC_LABEL).map(([k,v])=>`<option value="${k}" ${k===a.tipe?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <label class="f">Ambang Minimum</label>
+      <input type="text" id="ea-ambang-${a.id}" inputmode="numeric" value="${a.ambang_minimum}"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <div class="hint">Saldo awal (${fmtRp(a.saldo_awal)}) sengaja tidak bisa diubah di sini, demi jejak audit. Kalau saldo sistem tidak cocok saldo nyata, buat transaksi penyesuaian lewat Input Transaksi — bukan mengubah angka ini langsung.</div>
+      <div class="btn-row" style="gap:6px;margin-top:4px;">
+        <button class="btn btn-sm" onclick="saveEditAkun(${a.id})">Simpan</button>
+        <button class="btn btn-sm btn-outline" onclick="editingAkunId=null; document.getElementById('screen').innerHTML=screenSettingAkun();">Batal</button>
+      </div>
+    </div>`;
+}
+function saveEditAkun(id){
+  const a = getAccount(id); if(!a) return;
+  const name = document.getElementById('ea-name-'+id).value.trim();
+  if(!name) return toast('Nama akun wajib diisi','error');
+  a.name = name;
+  a.tipe = document.getElementById('ea-tipe-'+id).value;
+  a.ambang_minimum = Number(document.getElementById('ea-ambang-'+id).value||0);
+  saveDB(); editingAkunId = null;
+  toast('Akun diperbarui','ok');
+  document.getElementById('screen').innerHTML = screenSettingAkun();
 }
 function addAkun(){
   const name = document.getElementById('na-name').value.trim();
@@ -1055,6 +1166,7 @@ function toggleAkun(id){
 }
 
 /* ---------------- KELOLA KATEGORI ---------------- */
+let editingKategoriId = null;
 function screenSettingKategori(){
   return `
     <div class="card">
@@ -1078,15 +1190,69 @@ function screenSettingKategori(){
     </div>
     <div class="section-title">Daftar Kategori</div>
     <div class="card" style="padding:6px 14px;">
-      ${DB.categories.map(c=>`
-        <div class="row-item">
-          <div class="row-main"><div class="row-title">${esc(c.name)}</div>
-            <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}
-            · ${c.account_ids? esc(c.account_ids.map(id=>getAccount(id)?.name||'-').join(', ')) : 'Semua akun'}</div></div>
-          <button class="btn btn-sm btn-danger" onclick="deleteKategori(${c.id})">Hapus</button>
-        </div>`).join('') || '<div class="empty-state">Belum ada kategori.</div>'}
+      ${DB.categories.map(c=> c.id===editingKategoriId ? renderKategoriEditRow(c) : renderKategoriRow(c)).join('') || '<div class="empty-state">Belum ada kategori.</div>'}
     </div>
   `;
+}
+function renderKategoriRow(c){
+  const dipakai = DB.transactions.some(t=>t.kategori_id===c.id);
+  return `
+    <div class="row-item">
+      <div class="row-main"><div class="row-title">${esc(c.name)} ${c.aktif===0?'<span class="badge badge-netral">Nonaktif</span>':''}</div>
+        <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}
+        · ${c.account_ids? esc(c.account_ids.map(id=>getAccount(id)?.name||'-').join(', ')) : 'Semua akun'}</div></div>
+      <div class="btn-row" style="gap:10px">
+        <button class="btn btn-sm" onclick="editingKategoriId=${c.id}; ekPending=null; document.getElementById('screen').innerHTML=screenSettingKategori();"> ✎ </button>
+        <button class="btn btn-sm ${c.aktif!==0?'btn-danger':''}" onclick="toggleKategori(${c.id})">${c.aktif!==0?' 🔐 ':' 🔓 '}</button>
+        ${!dipakai ? `<button class="btn btn-sm btn-danger" onclick="deleteKategori(${c.id})"> ❎ </button>` : ''}
+      </div>
+    </div>`;
+}
+function renderKategoriEditRow(c){
+  if(!ekPending) ekPending = { allAccounts: !c.account_ids, ids: c.account_ids ? c.account_ids.slice() : [] };
+  const accs = activeAccounts();
+  return `
+    <div class="row-item" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <label class="f" style="margin-top:0">Nama Kategori</label>
+      <input type="text" id="ek-name-${c.id}" value="${esc(c.name)}">
+      <div class="hint">Flow (${c.flow}) tidak bisa diubah — kalau flow-nya salah dari awal, sebaiknya nonaktifkan kategori ini dan buat kategori baru dengan flow yang benar.</div>
+      <label class="f">Berlaku untuk Akun</label>
+      <div class="seg" style="flex-wrap:wrap;">
+        <button type="button" class="seg-btn ${ekPending.allAccounts?'sel':''}" onclick="ekToggleAll()">Semua Akun</button>
+        ${accs.map(a=>`<button type="button" class="seg-btn ${!ekPending.allAccounts && ekPending.ids.includes(a.id)?'sel':''}"
+          onclick="ekToggleAcc(${a.id})">${esc(a.name)}</button>`).join('')}
+      </div>
+      <div class="btn-row" style="gap:6px;margin-top:4px;">
+        <button class="btn btn-sm" onclick="saveEditKategori(${c.id})">Simpan</button>
+        <button class="btn btn-sm btn-outline" onclick="editingKategoriId=null; ekPending=null; document.getElementById('screen').innerHTML=screenSettingKategori();">Batal</button>
+      </div>
+    </div>`;
+}
+let ekPending = null;
+function ekToggleAll(){
+  ekPending.allAccounts = true; ekPending.ids = [];
+  document.getElementById('screen').innerHTML = screenSettingKategori();
+}
+function ekToggleAcc(accId){
+  ekPending.allAccounts = false;
+  const i = ekPending.ids.indexOf(accId);
+  if(i>=0) ekPending.ids.splice(i,1); else ekPending.ids.push(accId);
+  document.getElementById('screen').innerHTML = screenSettingKategori();
+}
+function saveEditKategori(id){
+  const c = getCategory(id); if(!c) return;
+  const name = document.getElementById('ek-name-'+id).value.trim();
+  if(!name) return toast('Nama kategori wajib diisi','error');
+  c.name = name;
+  c.account_ids = ekPending.allAccounts ? null : (ekPending.ids.length ? ekPending.ids : null);
+  ekPending = null; editingKategoriId = null;
+  saveDB();
+  toast('Kategori diperbarui','ok');
+  document.getElementById('screen').innerHTML = screenSettingKategori();
+}
+function toggleKategori(id){
+  const c = getCategory(id); c.aktif = c.aktif===0 ? 1 : 0; saveDB();
+  document.getElementById('screen').innerHTML = screenSettingKategori();
 }
 window._newCatFlow = 'Pemasukan'; window._newCatArah = '+';
 function selNewCatFlow(f){
@@ -1135,7 +1301,7 @@ function screenSettingKasir(){
         <div class="row-item">
           <div class="row-main"><div class="row-title">${esc(k.nama)} ${k.aktif?'':'<span class="badge badge-netral">Nonaktif</span>'}</div>
           <div class="row-sub">${k.pin_hash? 'PIN aktif':'Tanpa PIN'}</div></div>
-          <button class="btn btn-sm ${k.aktif?'btn-danger':''}" onclick="toggleKasir(${k.id})">${k.aktif?'Nonaktifkan':'Aktifkan'}</button>
+          <button class="btn btn-sm ${k.aktif?'btn-danger':''}" onclick="toggleKasir(${k.id})">${k.aktif?' 🔐 ':' 🔓 '}</button>
         </div>`).join('')}
     </div>
   `;
