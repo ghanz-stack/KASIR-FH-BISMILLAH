@@ -1,3 +1,1412 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    build-apk.yml
+android/
+  app/
+    src/
+      androidTest/
+        java/
+          com/
+            getcapacitor/
+              myapp/
+                ExampleInstrumentedTest.java
+      main/
+        java/
+          id/
+            co/
+              usahabersamanatar/
+                kasirfronthouse/
+                  MainActivity.java
+        res/
+          drawable/
+            ic_launcher_background.xml
+            splash.png
+          drawable-land-hdpi/
+            splash.png
+          drawable-land-mdpi/
+            splash.png
+          drawable-land-xhdpi/
+            splash.png
+          drawable-land-xxhdpi/
+            splash.png
+          drawable-land-xxxhdpi/
+            splash.png
+          drawable-port-hdpi/
+            splash.png
+          drawable-port-mdpi/
+            splash.png
+          drawable-port-xhdpi/
+            splash.png
+          drawable-port-xxhdpi/
+            splash.png
+          drawable-port-xxxhdpi/
+            splash.png
+          drawable-v24/
+            ic_launcher_foreground.xml
+          layout/
+            activity_main.xml
+          mipmap-anydpi-v26/
+            ic_launcher_round.xml
+            ic_launcher.xml
+          mipmap-hdpi/
+            ic_launcher_foreground.png
+            ic_launcher_round.png
+            ic_launcher.png
+          mipmap-mdpi/
+            ic_launcher_foreground.png
+            ic_launcher_round.png
+            ic_launcher.png
+          mipmap-xhdpi/
+            ic_launcher_foreground.png
+            ic_launcher_round.png
+            ic_launcher.png
+          mipmap-xxhdpi/
+            ic_launcher_foreground.png
+            ic_launcher_round.png
+            ic_launcher.png
+          mipmap-xxxhdpi/
+            ic_launcher_foreground.png
+            ic_launcher_round.png
+            ic_launcher.png
+          values/
+            ic_launcher_background.xml
+            strings.xml
+            styles.xml
+          xml/
+            file_paths.xml
+        AndroidManifest.xml
+      test/
+        java/
+          com/
+            getcapacitor/
+              myapp/
+                ExampleUnitTest.java
+    .gitignore
+    build.gradle
+    capacitor.build.gradle
+    proguard-rules.pro
+  gradle/
+    wrapper/
+      gradle-wrapper.jar
+      gradle-wrapper.properties
+  .gitignore
+  build.gradle
+  capacitor.settings.gradle
+  gradle.properties
+  gradlew
+  gradlew.bat
+  settings.gradle
+  variables.gradle
+www/
+  icons/
+    icon-192.png
+    icon-512.png
+  apple-touch-icon.png
+  favicon.png
+  fhouse.svg
+  index.html
+  manifest.json
+  sw.js
+.gitignore
+capacitor.config.json
+package.json
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".github/workflows/build-apk.yml">
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install JS deps
+        run: npm install
+
+      - name: Sync Capacitor (copy www + plugins into android/)
+        run: npx cap sync android
+
+      - name: Grant execute to gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kasir-fronthouse-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+</file>
+
+<file path="android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java">
+package com.getcapacitor.myapp;
+
+import static org.junit.Assert.*;
+
+import android.content.Context;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+@RunWith(AndroidJUnit4.class)
+public class ExampleInstrumentedTest {
+
+    @Test
+    public void useAppContext() throws Exception {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        assertEquals("com.getcapacitor.app", appContext.getPackageName());
+    }
+}
+</file>
+
+<file path="android/app/src/main/java/id/co/usahabersamanatar/kasirfronthouse/MainActivity.java">
+package id.co.usahabersamanatar.kasirfronthouse;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}
+</file>
+
+<file path="android/app/src/main/res/drawable/ic_launcher_background.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <path
+        android:fillColor="#26A69A"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M9,0L9,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,0L19,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M29,0L29,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M39,0L39,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M49,0L49,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M59,0L59,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,0L69,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M79,0L79,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M89,0L89,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M99,0L99,108"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,9L108,9"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,19L108,19"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,29L108,29"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,39L108,39"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,49L108,49"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,59L108,59"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,69L108,69"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,79L108,79"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,89L108,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,99L108,99"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,29L89,29"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,39L89,39"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,49L89,49"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,59L89,59"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,69L89,69"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,79L89,79"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M29,19L29,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M39,19L39,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M49,19L49,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M59,19L59,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,19L69,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M79,19L79,89"
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="0.8" />
+</vector>
+</file>
+
+<file path="android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml">
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <path
+        android:fillType="evenOdd"
+        android:pathData="M32,64C32,64 38.39,52.99 44.13,50.95C51.37,48.37 70.14,49.57 70.14,49.57L108.26,87.69L108,109.01L75.97,107.97L32,64Z"
+        android:strokeColor="#00000000"
+        android:strokeWidth="1">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="78.5885"
+                android:endY="90.9159"
+                android:startX="48.7653"
+                android:startY="61.0927"
+                android:type="linear">
+                <item
+                    android:color="#44000000"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00000000"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="nonZero"
+        android:pathData="M66.94,46.02L66.94,46.02C72.44,50.07 76,56.61 76,64L32,64C32,56.61 35.56,50.11 40.98,46.06L36.18,41.19C35.45,40.45 35.45,39.3 36.18,38.56C36.91,37.81 38.05,37.81 38.78,38.56L44.25,44.05C47.18,42.57 50.48,41.71 54,41.71C57.48,41.71 60.78,42.57 63.68,44.05L69.11,38.56C69.84,37.81 70.98,37.81 71.71,38.56C72.44,39.3 72.44,40.45 71.71,41.19L66.94,46.02ZM62.94,56.92C64.08,56.92 65,56.01 65,54.88C65,53.76 64.08,52.85 62.94,52.85C61.8,52.85 60.88,53.76 60.88,54.88C60.88,56.01 61.8,56.92 62.94,56.92ZM45.06,56.92C46.2,56.92 47.13,56.01 47.13,54.88C47.13,53.76 46.2,52.85 45.06,52.85C43.92,52.85 43,53.76 43,54.88C43,56.01 43.92,56.92 45.06,56.92Z"
+        android:strokeColor="#00000000"
+        android:strokeWidth="1" />
+</vector>
+</file>
+
+<file path="android/app/src/main/res/layout/activity_main.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <WebView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</file>
+
+<file path="android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="android/app/src/main/res/values/ic_launcher_background.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#5A73EF</color>
+</resources>
+</file>
+
+<file path="android/app/src/main/res/values/strings.xml">
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kasir Front House</string>
+    <string name="title_activity_main">Kasir Front House</string>
+    <string name="package_name">id.co.usahabersamanatar.kasirfronthouse</string>
+    <string name="custom_url_scheme">id.co.usahabersamanatar.kasirfronthouse</string>
+</resources>
+</file>
+
+<file path="android/app/src/main/res/values/styles.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+    </style>
+
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash</item>
+    </style>
+</resources>
+</file>
+
+<file path="android/app/src/main/res/xml/file_paths.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-path name="my_images" path="." />
+    <cache-path name="my_cache_images" path="." />
+</paths>
+</file>
+
+<file path="android/app/src/main/AndroidManifest.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+</file>
+
+<file path="android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java">
+package com.getcapacitor.myapp;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+public class ExampleUnitTest {
+
+    @Test
+    public void addition_isCorrect() throws Exception {
+        assertEquals(4, 2 + 2);
+    }
+}
+</file>
+
+<file path="android/app/.gitignore">
+/build/*
+!/build/.npmkeep
+</file>
+
+<file path="android/app/build.gradle">
+apply plugin: 'com.android.application'
+
+android {
+    namespace "id.co.usahabersamanatar.kasirfronthouse"
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "id.co.usahabersamanatar.kasirfronthouse"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+</file>
+
+<file path="android/app/capacitor.build.gradle">
+// DO NOT EDIT THIS FILE! IT IS GENERATED EACH TIME "capacitor update" IS RUN
+
+android {
+  compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
+dependencies {
+
+
+}
+
+
+if (hasProperty('postBuildExtras')) {
+  postBuildExtras()
+}
+</file>
+
+<file path="android/app/proguard-rules.pro">
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+</file>
+
+<file path="android/gradle/wrapper/gradle-wrapper.properties">
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.2.1-all.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+</file>
+
+<file path="android/.gitignore">
+# Using Android gitignore template: https://github.com/github/gitignore/blob/HEAD/Android.gitignore
+
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+#  Uncomment the following line in case you need and you don't have the release build type files in your app
+# release/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Proguard folder generated by Eclipse
+proguard/
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+# Android Studio 3 in .gitignore file.
+.idea/caches
+.idea/modules.xml
+# Comment next line if keeping position of elements in Navigation Editor is relevant for you
+.idea/navEditor.xml
+
+# Keystore files
+# Uncomment the following lines if you do not want to check your keystore files in.
+#*.jks
+#*.keystore
+
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild
+.cxx/
+
+# Google Services (e.g. APIs or Firebase)
+# google-services.json
+
+# Freeline
+freeline.py
+freeline/
+freeline_project_description.json
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Version control
+vcs.xml
+
+# lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+# lint/reports/
+
+# Android Profiling
+*.hprof
+
+# Cordova plugins for Capacitor
+capacitor-cordova-android-plugins
+
+# Copied web assets
+app/src/main/assets/public
+
+# Generated Config files
+app/src/main/assets/capacitor.config.json
+app/src/main/assets/capacitor.plugins.json
+app/src/main/res/xml/config.xml
+</file>
+
+<file path="android/build.gradle">
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath 'com.google.gms:google-services:4.4.0'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+</file>
+
+<file path="android/capacitor.settings.gradle">
+// DO NOT EDIT THIS FILE! IT IS GENERATED EACH TIME "capacitor update" IS RUN
+include ':capacitor-android'
+project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
+</file>
+
+<file path="android/gradle.properties">
+# Project-wide Gradle settings.
+
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+
+# Specifies the JVM arguments used for the daemon process.
+# The setting is particularly useful for tweaking memory settings.
+org.gradle.jvmargs=-Xmx1536m
+
+# When configured, Gradle will run in incubating parallel mode.
+# This option should only be used with decoupled projects. More details, visit
+# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
+# org.gradle.parallel=true
+
+# AndroidX package structure to make it clearer which packages are bundled with the
+# Android operating system, and which are packaged with your app's APK
+# https://developer.android.com/topic/libraries/support-library/androidx-rn
+android.useAndroidX=true
+</file>
+
+<file path="android/gradlew">
+#!/bin/sh
+
+#
+# Copyright © 2015-2021 the original authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+##############################################################################
+#
+#   Gradle start up script for POSIX generated by Gradle.
+#
+#   Important for running:
+#
+#   (1) You need a POSIX-compliant shell to run this script. If your /bin/sh is
+#       noncompliant, but you have some other compliant shell such as ksh or
+#       bash, then to run this script, type that shell name before the whole
+#       command line, like:
+#
+#           ksh Gradle
+#
+#       Busybox and similar reduced shells will NOT work, because this script
+#       requires all of these POSIX shell features:
+#         * functions;
+#         * expansions «$var», «${var}», «${var:-default}», «${var+SET}»,
+#           «${var#prefix}», «${var%suffix}», and «$( cmd )»;
+#         * compound commands having a testable exit status, especially «case»;
+#         * various built-in commands including «command», «set», and «ulimit».
+#
+#   Important for patching:
+#
+#   (2) This script targets any POSIX shell, so it avoids extensions provided
+#       by Bash, Ksh, etc; in particular arrays are avoided.
+#
+#       The "traditional" practice of packing multiple parameters into a
+#       space-separated string is a well documented source of bugs and security
+#       problems, so this is (mostly) avoided, by progressively accumulating
+#       options in "$@", and eventually passing that to Java.
+#
+#       Where the inherited environment variables (DEFAULT_JVM_OPTS, JAVA_OPTS,
+#       and GRADLE_OPTS) rely on word-splitting, this is performed explicitly;
+#       see the in-line comments for details.
+#
+#       There are tweaks for specific operating systems such as AIX, CygWin,
+#       Darwin, MinGW, and NonStop.
+#
+#   (3) This script is generated from the Groovy template
+#       https://github.com/gradle/gradle/blob/HEAD/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       within the Gradle project.
+#
+#       You can find Gradle at https://github.com/gradle/gradle/.
+#
+##############################################################################
+
+# Attempt to set APP_HOME
+
+# Resolve links: $0 may be a link
+app_path=$0
+
+# Need this for daisy-chained symlinks.
+while
+    APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
+    [ -h "$app_path" ]
+do
+    ls=$( ls -ld "$app_path" )
+    link=${ls#*' -> '}
+    case $link in             #(
+      /*)   app_path=$link ;; #(
+      *)    app_path=$APP_HOME$link ;;
+    esac
+done
+
+# This is normally unused
+# shellcheck disable=SC2034
+APP_BASE_NAME=${0##*/}
+APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit
+
+# Use the maximum available, or set MAX_FD != -1 to use that value.
+MAX_FD=maximum
+
+warn () {
+    echo "$*"
+} >&2
+
+die () {
+    echo
+    echo "$*"
+    echo
+    exit 1
+} >&2
+
+# OS specific support (must be 'true' or 'false').
+cygwin=false
+msys=false
+darwin=false
+nonstop=false
+case "$( uname )" in                #(
+  CYGWIN* )         cygwin=true  ;; #(
+  Darwin* )         darwin=true  ;; #(
+  MSYS* | MINGW* )  msys=true    ;; #(
+  NONSTOP* )        nonstop=true ;;
+esac
+
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+
+# Determine the Java command to use to start the JVM.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+        # IBM's JDK on AIX uses strange locations for the executables
+        JAVACMD=$JAVA_HOME/jre/sh/java
+    else
+        JAVACMD=$JAVA_HOME/bin/java
+    fi
+    if [ ! -x "$JAVACMD" ] ; then
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+else
+    JAVACMD=java
+    if ! command -v java >/dev/null 2>&1
+    then
+        die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+fi
+
+# Increase the maximum file descriptors if we can.
+if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
+    case $MAX_FD in #(
+      max*)
+        # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
+        # shellcheck disable=SC3045
+        MAX_FD=$( ulimit -H -n ) ||
+            warn "Could not query maximum file descriptor limit"
+    esac
+    case $MAX_FD in  #(
+      '' | soft) :;; #(
+      *)
+        # In POSIX sh, ulimit -n is undefined. That's why the result is checked to see if it worked.
+        # shellcheck disable=SC3045
+        ulimit -n "$MAX_FD" ||
+            warn "Could not set maximum file descriptor limit to $MAX_FD"
+    esac
+fi
+
+# Collect all arguments for the java command, stacking in reverse order:
+#   * args from the command line
+#   * the main class name
+#   * -classpath
+#   * -D...appname settings
+#   * --module-path (only if needed)
+#   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
+
+# For Cygwin or MSYS, switch paths to Windows format before running java
+if "$cygwin" || "$msys" ; then
+    APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
+    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+
+    JAVACMD=$( cygpath --unix "$JAVACMD" )
+
+    # Now convert the arguments - kludge to limit ourselves to /bin/sh
+    for arg do
+        if
+            case $arg in                                #(
+              -*)   false ;;                            # don't mess with options #(
+              /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
+                    [ -e "$t" ] ;;                      #(
+              *)    false ;;
+            esac
+        then
+            arg=$( cygpath --path --ignore --mixed "$arg" )
+        fi
+        # Roll the args list around exactly as many times as the number of
+        # args, so each arg winds up back in the position where it started, but
+        # possibly modified.
+        #
+        # NB: a `for` loop captures its iteration list before it begins, so
+        # changing the positional parameters here affects neither the number of
+        # iterations, nor the values presented in `arg`.
+        shift                   # remove old arg
+        set -- "$@" "$arg"      # push replacement arg
+    done
+fi
+
+
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+# Collect all arguments for the java command;
+#   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
+#     shell script including quotes and variable substitutions, so put them in
+#     double quotes to make sure that they get re-expanded; and
+#   * put everything else in single quotes, so that it's not re-expanded.
+
+set -- \
+        "-Dorg.gradle.appname=$APP_BASE_NAME" \
+        -classpath "$CLASSPATH" \
+        org.gradle.wrapper.GradleWrapperMain \
+        "$@"
+
+# Stop when "xargs" is not available.
+if ! command -v xargs >/dev/null 2>&1
+then
+    die "xargs is not available"
+fi
+
+# Use "xargs" to parse quoted args.
+#
+# With -n1 it outputs one arg per line, with the quotes and backslashes removed.
+#
+# In Bash we could simply go:
+#
+#   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
+#   set -- "${ARGS[@]}" "$@"
+#
+# but POSIX shell has neither arrays nor command substitution, so instead we
+# post-process each arg (as a line of input to sed) to backslash-escape any
+# character that might be a shell metacharacter, then use eval to reverse
+# that process (while maintaining the separation between arguments), and wrap
+# the whole thing up as a single "set" statement.
+#
+# This will of course break if any of these variables contains a newline or
+# an unmatched quote.
+#
+
+eval "set -- $(
+        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
+        xargs -n1 |
+        sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
+        tr '\n' ' '
+    )" '"$@"'
+
+exec "$JAVACMD" "$@"
+</file>
+
+<file path="android/gradlew.bat">
+@rem
+@rem Copyright 2015 the original author or authors.
+@rem
+@rem Licensed under the Apache License, Version 2.0 (the "License");
+@rem you may not use this file except in compliance with the License.
+@rem You may obtain a copy of the License at
+@rem
+@rem      https://www.apache.org/licenses/LICENSE-2.0
+@rem
+@rem Unless required by applicable law or agreed to in writing, software
+@rem distributed under the License is distributed on an "AS IS" BASIS,
+@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@rem See the License for the specific language governing permissions and
+@rem limitations under the License.
+@rem
+
+@if "%DEBUG%"=="" @echo off
+@rem ##########################################################################
+@rem
+@rem  Gradle startup script for Windows
+@rem
+@rem ##########################################################################
+
+@rem Set local scope for the variables with windows NT shell
+if "%OS%"=="Windows_NT" setlocal
+
+set DIRNAME=%~dp0
+if "%DIRNAME%"=="" set DIRNAME=.
+@rem This is normally unused
+set APP_BASE_NAME=%~n0
+set APP_HOME=%DIRNAME%
+
+@rem Resolve any "." and ".." in APP_HOME to make it shorter.
+for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+@rem Find java.exe
+if defined JAVA_HOME goto findJavaFromJavaHome
+
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if %ERRORLEVEL% equ 0 goto execute
+
+echo.
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
+
+goto fail
+
+:findJavaFromJavaHome
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+
+if exist "%JAVA_EXE%" goto execute
+
+echo.
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
+
+goto fail
+
+:execute
+@rem Setup the command line
+
+set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+
+
+@rem Execute Gradle
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+:end
+@rem End local scope for the variables with windows NT shell
+if %ERRORLEVEL% equ 0 goto mainEnd
+
+:fail
+rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+rem the _cmd.exe /c_ return code!
+set EXIT_CODE=%ERRORLEVEL%
+if %EXIT_CODE% equ 0 set EXIT_CODE=1
+if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
+exit /b %EXIT_CODE%
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+:omega
+</file>
+
+<file path="android/settings.gradle">
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'
+</file>
+
+<file path="android/variables.gradle">
+ext {
+    minSdkVersion = 22
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxActivityVersion = '1.8.0'
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.12.0'
+    androidxFragmentVersion = '1.6.2'
+    coreSplashScreenVersion = '1.0.1'
+    androidxWebkitVersion = '1.9.0'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+    cordovaAndroidVersion = '10.1.1'
+}
+</file>
+
+<file path="www/fhouse.svg">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2732.64 2732.64">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #5a73ef;
+      }
+
+      .cls-2 {
+        fill: #ede043;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <rect class="cls-1" width="2732.64" height="2732.64"/>
+    <path class="cls-2" d="M219.26,827.94h314.73v134.62h-142.72v48.61h125.26v122.15h-125.26v164.53H219.26v-469.91Z"/>
+    <path class="cls-2" d="M594.44,827.94h206.29c105.95,0,195.69,44.87,195.69,163.28,0,71.05-27.42,100.96-90.99,122.15v3.74c8.73,6.86,19.32,14.34,28.67,28.04l102.21,152.69h-196.94l-74.78-150.82h-3.12v150.82h-167.02v-469.91Zm167.02,208.16h11.84c28.04,0,56.09-4.36,56.09-39.26s-25.55-40.51-54.84-40.51h-13.09v79.77Z"/>
+    <path class="cls-2" d="M1569.17,1064.14c0,150.82-116.54,241.19-259.88,241.19s-259.88-90.37-259.88-241.19,117.17-243.68,259.88-243.68,259.88,95.98,259.88,243.68Zm-347.76,2.49c0,53.6,36.15,90.37,87.87,90.37s87.87-36.77,87.87-90.37c0-49.86-33.65-91.61-87.87-91.61s-87.87,41.76-87.87,91.61Z"/>
+    <path class="cls-2" d="M1640,827.94h163.91l153.31,260.51h4.99c-6.86-39.26-14.33-79.77-14.33-119.66v-140.85h163.28v469.91h-163.28l-150.2-246.8h-4.98c5.61,32.41,10.59,62.95,10.59,94.11v152.69h-163.28v-469.91Z"/>
+    <path class="cls-2" d="M2185.73,827.94h358.97v152.69l-94.11-4.36v321.58h-170.76v-321.58l-94.11,4.36v-152.69Z"/>
+    <path class="cls-2" d="M218.64,1372.03h161.86v155.73h103v-155.73h161.86v462.28h-161.86v-160.63h-103v160.63H218.64v-462.28Z"/>
+    <path class="cls-2" d="M1215.53,1604.4c0,148.37-114.65,237.27-255.66,237.27s-255.66-88.9-255.66-237.27,115.26-239.72,255.66-239.72,255.66,94.42,255.66,239.72Zm-342.11,2.45c0,52.73,35.56,88.9,86.45,88.9s86.45-36.17,86.45-88.9c0-49.05-33.11-90.13-86.45-90.13s-86.45,41.08-86.45,90.13Z"/>
+    <path class="cls-2" d="M1710.14,1372.03v273.44c0,134.88-84.61,196.19-213.97,196.19s-213.97-61.31-213.97-196.19v-273.44h167.99v257.51c0,36.17,1.23,68.05,45.98,68.05s45.98-31.88,45.98-68.05v-257.51h167.99Z"/>
+    <path class="cls-2" d="M1811.91,1668.77l8.58,6.74c30.04,23.3,66.21,42.3,104.84,42.3,16.56,0,42.92-6.74,42.92-27.59s-22.07-22.69-37.4-25.75l-33.72-6.13c-65.6-11.65-120.78-50.28-120.78-122.62,0-109.74,99.93-171.06,200.48-171.06,52.73,0,101.16,12.88,146.53,40.46l-45.37,118.33c-28.82-19.62-61.31-34.95-97.48-34.95-14.71,0-36.17,5.52-36.17,24.52,0,17.17,20.84,19.62,33.72,22.68l38.01,8.59c71.12,15.94,122.62,53.95,122.62,132.43,0,110.36-100.55,164.92-200.49,164.92-58.25,0-125.69-15.94-177.8-42.3l51.5-130.59Z"/>
+    <path class="cls-2" d="M2220.53,1372.03h310.84v126.3h-141.63v44.14h129.37v120.17h-129.37v45.37h146.53v126.3h-315.75v-462.28Z"/>
+  </g>
+</svg>
+</file>
+
+<file path="www/manifest.json">
+{
+  "name": "Kasir Front House",
+  "short_name": "Kasir",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0F766E",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
+</file>
+
+<file path="www/sw.js">
+// ponytail: no-op service worker. App dibundle native via Capacitor jadi sudah offline
+// by default; SW ini cuma supaya registration di index.html tidak 404 di log.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', () => self.clients.claim());
+</file>
+
+<file path=".gitignore">
+node_modules/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+*.apk
+.DS_Store
+</file>
+
+<file path="capacitor.config.json">
+{
+  "appId": "id.co.usahabersamanatar.kasirfronthouse",
+  "appName": "Kasir Front House",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "kasir-fronthouse",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
+</file>
+
+<file path="README.md">
+# Kasir Front House — Android App
+
+Single-file HTML/CSS/JS (`www/index.html`) dibungkus jadi APK Android via
+Capacitor. Build APK dilakukan otomatis oleh GitHub Actions
+(`.github/workflows/build-apk.yml`) setiap push ke `main`/`master`, atau
+manual lewat tab **Actions → Build Android APK → Run workflow**.
+
+## Cara pakai
+1. Push repo ini ke GitHub.
+2. Buka tab **Actions**, tunggu workflow selesai (~3-5 menit).
+3. Download APK dari **Artifacts** di halaman run tersebut
+   (`kasir-fronthouse-debug-apk`).
+4. Install di HP Android (aktifkan "Install dari sumber tidak dikenal").
+
+APK yang dihasilkan adalah **debug build** (langsung installable, tanpa
+signing key). Kalau nanti butuh release build buat Play Store, tinggal
+tambah signing config di `android/app/build.gradle` — belum dibuat karena
+belum diminta (YAGNI).
+
+## Bug yang diperbaiki sebelum packaging
+
+1. **`submitTransfer` (Pindah Saldo) — bug uang hilang.** Cuma cek lock
+   "Tutup Kasir" di akun asal, akun tujuan tidak dicek. Kalau akun tujuan
+   sudah ditutup-kasir hari itu, transfer tetap sukses tapi saldonya tidak
+   pernah muncul di akun manapun (karena `getSaldo()` skip transaksi
+   bertanggal ≤ tanggal closing). Sekarang akun tujuan ikut dicek.
+2. **`lunasiKasbon` — bug uang hilang yang sama.** Fungsi ini bikin
+   transaksi baru ke akun kas tanpa cek lock closing sama sekali. Kalau
+   akun kas itu sudah tutup-kasir hari ini, pelunasan kasbon nyangkut jadi
+   uang hilang dari saldo. Ditambahkan guard yang sama seperti transaksi
+   biasa.
+3. **`renderLock` crash guard.** Kalau kasir yang sedang dipilih di lock
+   screen sempat dinonaktifkan, `getKasir()` bisa balikin `undefined` dan
+   bikin crash saat baca `.pin_hash`. Ditambah guard, fallback balik ke
+   layar pilih kasir.
+4. **`sw.js` 404.** `index.html` daftar service worker `sw.js` tapi filenya
+   tidak ada di paket asli — sekarang ada file no-op (aplikasi native lewat
+   Capacitor sudah offline by default, jadi SW ini cuma buat menghilangkan
+   404 di log/console).
+
+## Icon
+`www/fhouse.svg` dipakai sebagai sumber semua icon: favicon, apple-touch-icon,
+manifest PWA icons, dan launcher icon Android (legacy + adaptive, semua
+densitas mdpi–xxxhdpi) di `android/app/src/main/res/mipmap-*`.
+
+## Struktur
+```
+www/                 -> source web app (yang di-edit kalau mau ubah fitur)
+android/              -> native project (auto-generated, jangan edit manual
+                          kecuali AndroidManifest/gradle untuk config native)
+capacitor.config.json -> appId, appName, webDir
+.github/workflows/    -> CI build APK
+```
+
+Setelah edit `www/index.html`, jalanin `npx cap copy android` (via
+`npm run sync`) sebelum push, supaya `android/app/src/main/assets/public`
+ikut ke-update — walau workflow CI juga otomatis `cap sync` sebelum build,
+jadi sebenarnya opsional untuk keperluan build, cuma berguna kalau mau test
+lokal di Android Studio.
+</file>
+
+<file path="www/index.html">
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -196,12 +1605,7 @@ const ACC_LABEL = {ewallet:'E-Wallet', bank:'Bank', cash:'Cash', voucher:'Vouche
 let DB = null;
 
 function nowIso(){ return new Date().toISOString(); }
-// ponytail: pakai locale 'en-CA' -> format YYYY-MM-DD tapi dari tanggal KALENDER LOKAL
-// perangkat, bukan UTC (beda dengan toISOString() yang selalu UTC). Ini akar masalah
-// bug "tanggal baru tidak bisa input setelah tutup kasir": untuk WIB (UTC+7), jam
-// 00:00-06:59 WIB itu masih tanggal kemarin kalau dihitung UTC, jadi kena kunci
-// closing.tanggal kemarin padahal buat pengguna sudah hari baru.
-function todayStr(){ return new Date().toLocaleDateString('en-CA'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 function uid(table){ const id = DB.nextId[table]++; return id; }
 function fmtRp(n){ n = Math.round(Number(n)||0); const neg = n<0; n=Math.abs(n);
   return (neg?'-':'')+'Rp '+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
@@ -217,18 +1621,7 @@ function toast(msg, type){
 
 function seedIfEmpty(){
   const acc = (name, tipe) => { const id = uid('accounts'); DB.accounts.push({id, name, tipe, saldo_awal:0, ambang_minimum:0, aktif:1}); return id; };
-  // cat: setiap kategori WAJIB nentuin flow & is_penjualan sendiri — tidak ada default
-  // diam-diam, ini akar bug lama (semua kategori ke-hardcode 'Pemasukan').
-  // is_penjualan: true = dihitung di "Volume Transaksi" (jasa/produk yang dijual ke
-  // customer dengan margin); false = mutasi/administratif (setor modal, ambil pribadi,
-  // belanja stok) yang TIDAK dianggap penjualan walau tetap mempengaruhi saldo.
-  const cat = (name, account_ids, flow, is_penjualan, arah) => {
-    DB.categories.push({id:uid('categories'), name, flow, is_penjualan: !!is_penjualan, arah, account_ids});
-  };
-  const jasaKeluar = (names, accIds) => names.forEach(n=>cat(n, accIds, 'Pengeluaran', true));   // Setor/Transfer: saldo saya keluar, tapi tetap penjualan/jasa
-  const jasaMasuk  = (names, accIds) => names.forEach(n=>cat(n, accIds, 'Pemasukan', true));      // Tarik: saldo saya nambah, tetap penjualan/jasa
-  const produkPPOB = (names, accIds) => names.forEach(n=>cat(n, accIds, 'Pengeluaran', true));    // stok/saldo terpakai, profit dicatat di field profit
-  const lainnyaAdmin = (accIds) => cat('Lainnya', accIds, 'Pengeluaran', false);                   // catch-all, konservatif: tidak dihitung penjualan
+  const cat = (name, account_ids) => { DB.categories.push({id:uid('categories'), name, flow:'Pemasukan', account_ids}); };
 
   const dana = [1,2,3,4].map(n=>acc('DANA '+n, 'ewallet'));
   const seaBank = acc('Sea Bank', 'bank');
@@ -240,48 +1633,22 @@ function seedIfEmpty(){
   const voucherFisik = acc('Voucher Fisik', 'voucher');
   const barang = acc('Barang', 'barang');
 
-  // DANA 1-4 (satu kategori dipakai bareng utk ke-4 akun, sama seperti versi asli)
-  // & Sea Bank (kategori sendiri): pola sama — Tarik masuk, Setor/Transfer keluar tapi tetap jasa
-  [dana, [seaBank]].forEach(accIds=>{
-    jasaMasuk(['Tarik'], accIds);
-    jasaKeluar(['TopUp','Transfer'], accIds);
-    lainnyaAdmin(accIds);
-  });
+  ['Tarik','Setor','Transfer','Lainnya'].forEach(n=>cat(n, dana));
+  ['Tarik','Setor','Transfer','Lainnya'].forEach(n=>cat(n, [seaBank]));
+  ['Transfer','Listrik','BRI VA','Gopay','Lainnya'].forEach(n=>cat(n, [shopeepay]));
+  ['Paket Data','Pulsa','Lainnya'].forEach(n=>cat(n, [saveplus]));
+  ['EDC','Topup','Paket Data','Pulsa','Lainnya'].forEach(n=>cat(n, [fastpay]));
+  ['Transfer','Setor','Tarik Tunai','Lainnya'].forEach(n=>cat(n, [mandiri]));
+  ['Tarik','Setor'].forEach(n=>cat(n, [cash]));
+  ['Paket Data & Perdana','Telkomsel','Tri','Indosat','Axis','Smartfren','XL'].forEach(n=>cat(n, [voucherFisik]));
+  ['Kabel','Charger','Mainan','Tempered Glass','Casing','Lainnya'].forEach(n=>cat(n, [barang]));
 
-  // Shopeepay: Transfer = jasa keluar; Listrik/BRI VA/Gopay = produk PPOB
-  jasaKeluar(['Transfer'], [shopeepay]);
-  produkPPOB(['Listrik','BRI VA','Gopay'], [shopeepay]);
-  lainnyaAdmin([shopeepay]);
-
-  // Saveplus & Fastpay: semua produk PPOB (paket data/pulsa/EDC/topup)
-  produkPPOB(['Paket Data','Pulsa'], [saveplus]);
-  lainnyaAdmin([saveplus]);
-  produkPPOB(['EDC','Topup','Paket Data','Pulsa'], [fastpay]);
-  lainnyaAdmin([fastpay]);
-
-  // Mandiri: sama pola dana (Tarik Tunai masuk, Setor/Transfer keluar tapi jasa)
-  jasaMasuk(['Tarik Tunai'], [mandiri]);
-  jasaKeluar(['Transfer','TopUp'], [mandiri]);
-  lainnyaAdmin([mandiri]);
-
-  // Cash: SPESIAL — ini uang tunai fisik di laci, arahnya kebalikan dari e-wallet.
-  // Setor = uang tunai MASUK ke laci (dari closing/pemilik/tukar saldo customer).
-  // Tarik = uang tunai KELUAR dari laci (dikasih ke customer yang tarik saldo).
-  // Bukan "penjualan" — cuma mutasi kas, jadi is_penjualan:false.
-  cat('Topup', [cash], 'Pemasukan', false);
-  cat('Tarik', [cash], 'Pengeluaran', false);
-
-  // Voucher Fisik & Barang: barang dagangan fisik terjual → stok/saldo keluar, tapi penjualan
-  produkPPOB(['Paket Data & Perdana','Telkomsel','Tri','Indosat','Axis','Smartfren','XL'], [voucherFisik]);
-  produkPPOB(['Kabel','Charger','Mainan','Tempered Glass','Casing','Lainnya'], [barang]);
-
-  // kategori umum, berlaku lintas akun (account_ids null = global) — flow ini
-  // sudah benar dari awal, cuma ditambah is_penjualan:false (bukan penjualan)
+  // kategori umum, berlaku lintas akun (account_ids null = global)
   DB.categories.push(
-    {id:uid('categories'), name:'Belanja Stok', flow:'Pengeluaran', is_penjualan:false, account_ids:null},
-    {id:uid('categories'), name:'Biaya Operasional', flow:'Pengeluaran', is_penjualan:false, account_ids:null},
-    {id:uid('categories'), name:'Setoran Pemilik', flow:'Netral', arah:'+', is_penjualan:false, account_ids:null},
-    {id:uid('categories'), name:'Ambil Pribadi (Prive)', flow:'Netral', arah:'-', is_penjualan:false, account_ids:null}
+    {id:uid('categories'), name:'Belanja Stok', flow:'Pengeluaran', account_ids:null},
+    {id:uid('categories'), name:'Biaya Operasional', flow:'Pengeluaran', account_ids:null},
+    {id:uid('categories'), name:'Setoran Pemilik', flow:'Netral', arah:'+', account_ids:null},
+    {id:uid('categories'), name:'Ambil Pribadi (Prive)', flow:'Netral', arah:'-', account_ids:null}
   );
 
   DB.kasir.push({id:uid('kasir'), nama:'Admin', pin_hash:null, pin_salt:null, aktif:1});
@@ -292,8 +1659,7 @@ function loadDB(){
   if(raw){ try{ DB = JSON.parse(raw); }catch(e){ DB = null; } }
   if(!DB){
     DB = {accounts:[], categories:[], transactions:[], kasbon:[], kasir:[], closings:[],
-      nextId:{accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1}, currentKasirId:null,
-      migratedFlowV2:true};
+      nextId:{accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1}, currentKasirId:null};
     seedIfEmpty();
     saveDB();
   }
@@ -303,101 +1669,14 @@ function loadDB(){
   if(!DB.settings) DB.settings = {fontScale:'regular'};
   if(!DB.settings.fontScale) DB.settings.fontScale = 'regular';
   applyFontScale();
-  const migrated = migrateFlowFixV2();
-  if(migrated){
-    saveDB();
-    alert('Update penting: arah saldo kategori (Topup/Tarik/Transfer/dll) yang salah dari awal sudah dibetulkan otomatis, termasuk transaksi lama. Saldo & laporan yang tampil sekarang mungkin berbeda dari sebelumnya — itu memang angka yang benar. Cek Kelola Kategori kalau ada yang perlu disesuaikan lagi.');
-  }
-  if(migrateTopupRename()) saveDB();
-  if(migrateExpenseTypeFix()) saveDB();
 }
 function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
-
-/* ---------- migrasi satu-kali: perbaikan arah saldo (flow) kategori & transaksi lama ----------
-   Bug lama: SEMUA kategori bawaan ke-hardcode flow:'Pemasukan' (lihat riwayat seedIfEmpty),
-   jadi setiap transaksi apapun selalu MENAMBAH saldo, tidak pernah mengurangi. Fungsi ini
-   membetulkan kategori yang belum pernah dibetulkan (ditandai is_penjualan===undefined),
-   LALU menerapkan ulang flow yang benar itu ke transaksi lama yang sudah tercatat pakai
-   kategori tsb (supaya saldo historis ikut kebetulan, bukan cuma transaksi baru).
-   Kategori custom yang sudah dibuat manual oleh user tidak disentuh (sudah pasti sudah
-   punya is_penjualan begitu ditambahkan lewat form, lihat addKategori). */
-function correctFlowFor(catName, accIds){
-  if(!accIds || !accIds.length) return null; // kategori global (Belanja Stok dkk) — flow-nya sudah benar dari awal
-  const acc = getAccount(accIds[0]);
-  if(!acc) return null;
-  if(acc.tipe==='cash'){
-    if(catName==='TopUp') return {flow:'Pemasukan', is_penjualan:false};
-    if(catName==='Tarik') return {flow:'Pengeluaran', is_penjualan:false};
-    return null;
-  }
-  if(catName==='Tarik' || catName==='Tarik Tunai') return {flow:'Pemasukan', is_penjualan:true};
-  if(catName==='TopUp' || catName==='Transfer') return {flow:'Pengeluaran', is_penjualan:true};
-  if(catName==='Lainnya'){
-    const tetapPenjualan = acc.tipe==='barang' || acc.tipe==='voucher';
-    return {flow:'Pengeluaran', is_penjualan: tetapPenjualan};
-  }
-  return {flow:'Pengeluaran', is_penjualan:true}; // produk PPOB / barang / voucher fisik
-}
-function migrateFlowFixV2(){
-  if(DB.migratedFlowV2) return false;
-  let changed = false;
-  const fixedCatIds = new Set();
-  DB.categories.forEach(c=>{
-    if(c.is_penjualan!==undefined) return; // sudah pernah dibetulkan / kategori custom user
-    if(!c.account_ids){ c.is_penjualan = false; changed = true; return; } // global, flow sudah benar
-    const fix = correctFlowFor(c.name, c.account_ids);
-    if(!fix) return;
-    c.flow = fix.flow; c.is_penjualan = fix.is_penjualan;
-    fixedCatIds.add(c.id); changed = true;
-  });
-  if(fixedCatIds.size){
-    DB.transactions.forEach(t=>{
-      if(t.kategori_id==null || !fixedCatIds.has(t.kategori_id)) return;
-      const cat = getCategory(t.kategori_id);
-      t.flow = cat.flow; t.is_penjualan = cat.is_penjualan;
-      changed = true;
-    });
-  }
-  DB.migratedFlowV2 = true;
-  return changed;
-}
-
-/* ---------- migrasi satu-kali: rename kategori 'TopUp/Setor' -> 'Topup' ----------
-   Supaya instalasi lama yang localStorage-nya masih punya nama kategori lama tetap
-   ikut ter-update (kategori dan histori transaksi yang sudah kepakai nama itu),
-   bukan cuma instalasi baru dari seedIfEmpty(). */
-function migrateTopupRename(){
-  if(DB.migratedTopupRename) return false;
-  let changed = false;
-  DB.categories.forEach(c=>{ if(c.name==='TopUp/Setor'){ c.name='Topup'; changed=true; } });
-  DB.transactions.forEach(t=>{ if(t.kategori==='TopUp/Setor'){ t.kategori='Topup'; changed=true; } });
-  DB.migratedTopupRename = true;
-  return changed;
-}
-
-/* ---------- migrasi satu-kali: bersihkan expense_type yang salah nempel ----------
-   Sebelum fix ini, semua transaksi flow='Pengeluaran' (termasuk transaksi JUALAN kayak
-   Topup e-wallet, produk PPOB, dll — yang saldo-nya keluar tapi tetap penjualan) ikut
-   ke-tag expense_type COGS/OPEX, jadi salah kehitung sebagai biaya di Laba Rugi. Migrasi
-   ini menghapus expense_type dari transaksi yang is_penjualan=true (bukan biaya asli). */
-function migrateExpenseTypeFix(){
-  if(DB.migratedExpenseTypeFix) return false;
-  let changed = false;
-  DB.transactions.forEach(t=>{
-    if(t.is_penjualan && t.expense_type){ t.expense_type = null; changed = true; }
-  });
-  DB.migratedExpenseTypeFix = true;
-  return changed;
-}
 
 /* ---------- getters ---------- */
 function getAccount(id){ return DB.accounts.find(a=>a.id===id); }
 function getCategory(id){ return DB.categories.find(c=>c.id===id); }
 function getKasir(id){ return DB.kasir.find(k=>k.id===id); }
 function activeAccounts(){ return DB.accounts.filter(a=>a.aktif); }
-/* akun yang merepresentasikan NILAI STOK fisik (Barang/Voucher Fisik) — dipakai Belanja
-   Stok buat nentuin akun mana yang nilainya harus nambah pas restock (lihat submitTransaksi). */
-function stockAccounts(){ return DB.accounts.filter(a=>a.aktif && (a.tipe==='barang'||a.tipe==='voucher')); }
 
 /* strategi saldo bertingkat: checkpoint tutup-kasir terakhir + transaksi setelahnya */
 function getLatestClosing(accountId){
@@ -521,7 +1800,7 @@ function render(){
 
 function renderTopbar(screen){
   const titles = {dashboard:'🏠 Dashboard', input:'➕ Input Transaksi', transfer:'🔁 Pindah Saldo', riwayat:'📜 Riwayat',
-    setting:'⚙️ Pengaturan', kasbon:'💰 Kasbon', tutupkasirpilih:'⛔ Tutup Kasir', tutupkasir:'⛔ Tutup Sebagian', tutupkasirseluruh:'⛔ Tutup Seluruh', laporan:'📝 Laporan', audit:'📃 Audit Log',
+    setting:'⚙️ Pengaturan', kasbon:'💰 Kasbon', tutupkasir:'⛔ Tutup Kasir', laporan:'📝 Laporan', audit:'📃 Audit Log',
     settingAkun:'🧍 Kelola Akun', settingKategori:'📎 Kelola Kategori', settingKasir:'💻 Kelola Kasir & PIN',
     settingImportExport:'📕 Import / Export CSV', settingFont:'⚡ Ukuran Font', txDetail:'💹 Detail Transaksi',
     editTx:'✏️ Edit Transaksi'};
@@ -556,9 +1835,7 @@ function renderScreen(screen){
     case 'riwayat': return screenRiwayat();
     case 'setting': return screenSettingHome();
     case 'kasbon': return screenKasbon();
-    case 'tutupkasirpilih': return screenTutupKasirPilih();
     case 'tutupkasir': return screenTutupKasir();
-    case 'tutupkasirseluruh': return screenTutupKasirSeluruh();
     case 'laporan': return screenLaporan();
     case 'audit': return screenAudit();
     case 'settingAkun': return screenSettingAkun();
@@ -577,8 +1854,8 @@ function screenDashboard(){
   let pendapatanRiil=0, volume=0;
   for(const t of DB.transactions){
     if(t.tanggal!==today) continue;
-    if(t.is_penjualan && t.payment_status==='paid') pendapatanRiil += (t.profit||0);
-    if(t.is_penjualan) volume += t.amount;
+    if(t.flow==='Pemasukan' && t.payment_status==='paid') pendapatanRiil += (t.profit||0);
+    if(t.flow==='Pemasukan' || t.flow==='Pengeluaran') volume += t.amount;
   }
   const alerts = [];
   for(const a of activeAccounts()){
@@ -600,15 +1877,15 @@ function screenDashboard(){
       <div class="val">${fmtRp(pendapatanRiil)}</div>
     </div>
     <div class="card-sub">
-      <div class="lbl">VOLUME PENJUALAN HARI INI &nbsp;<span title="Total nilai transaksi penjualan/jasa (Tarik, Topup, produk PPOB, barang). Mutasi kas & pindah saldo antar akun tidak termasuk.">ⓘ</span></div>
+      <div class="lbl">VOLUME TRANSAKSI HARI INI &nbsp;<span title="Dana yang lewat, bukan pendapatan Anda">ⓘ</span></div>
       <div class="val" style="color:var(--muted)">${fmtRp(volume)}</div>
-      <div class="hint">Nilai transaksi penjualan/jasa, bukan pendapatan bersih Anda.</div>
+      <div class="hint">Dana lewat (masuk+keluar), bukan pendapatan bersih Anda.</div>
     </div>
     ${alerts.length? `<div class="alert-strip">${alerts.map(a=>`<div class="alert-chip ${a.danger?'danger':''}">${esc(a.txt)}</div>`).join('')}</div>`:''}
 
     <div class="section-title">Pintasan</div>
     <div class="shortcuts">
-      <button class="shortcut" style="background:#0F766E" onclick="navigate('tutupkasirpilih')"><span class="ic">🔐</span>Tutup Kasir</button>
+      <button class="shortcut" style="background:#0F766E" onclick="navigate('tutupkasir')"><span class="ic">🔐</span>Tutup Kasir</button>
       <button class="shortcut" style="background:var(--mutasi)" onclick="navigate('transfer')"><span class="ic">🔁</span>Pindah Saldo</button>
       <button class="shortcut" style="background:var(--bank)" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan</button>
       <button class="shortcut" style="background:var(--voucher)" onclick="navigate('laporan')"><span class="ic">🏷️</span>Per Kategori</button>
@@ -642,7 +1919,7 @@ function kpPress(k){
 }
 function renderKeypad(){
   return `
-    <div class="amount-display" id="kp-display" onclick="scrollToMe(this)">${fmtRp(kpValue)}</div>
+    <div class="amount-display" id="kp-display">${fmtRp(kpValue)}</div>
     <div class="keypad">
       ${['1','2','3','4','5','6','7','8','9'].map(n=>`<button type="button" class="key" onclick="kpPress('${n}')">${n}</button>`).join('')}
       <button type="button" class="key fn" onclick="kpPress('clear')">C</button>
@@ -660,15 +1937,12 @@ function screenInput(fresh){
   if(fresh!==false){
     editingTxId = null;
     kpValue = '0';
-    window._expenseType = 'COGS';
-    inputState = {account_id: activeAccounts()[0]?.id||null, category_id:null, payment_status:'paid', target_stock_id:null};
+    inputState = {account_id: activeAccounts()[0]?.id||null, category_id:null, payment_status:'paid'};
     const firstCats = inputCategoriesFor(inputState.account_id);
     inputState.category_id = firstCats[0]?.id || null;
-    if(getCategory(inputState.category_id)?.name==='Belanja Stok') inputState.target_stock_id = stockAccounts()[0]?.id||null;
   }
   const cats = inputCategoriesFor(inputState.account_id);
   const cat = getCategory(inputState.category_id);
-  const editingTx = editingTxId ? DB.transactions.find(x=>x.id===editingTxId) : null;
   return `
     <label class="f">Akun</label>
     <div class="seg" id="acc-seg">
@@ -688,29 +1962,18 @@ function screenInput(fresh){
     <label class="f">Nominal</label>
     ${renderKeypad()}
 
-    <div id="profit-wrap" style="${cat && cat.is_penjualan?'':'display:none'}">
+    <div id="profit-wrap" style="${cat && cat.flow==='Pemasukan'?'':'display:none'}">
       <label class="f">Profit / Margin (opsional)</label>
-      <input type="text" inputmode="numeric" id="f-profit" placeholder="0" value="${editingTx && editingTx.profit ? editingTx.profit : ''}" onfocus="scrollToMe(this)"
+      <input type="text" inputmode="numeric" id="f-profit" placeholder="0" onfocus="scrollToMe(this)"
         oninput="this.value=this.value.replace(/[^0-9]/g,'')">
     </div>
 
-    <div id="expense-type-wrap" style="${cat && cat.flow==='Pengeluaran' && !cat.is_penjualan && cat.name!=='Belanja Stok'?'':'display:none'}">
+    <div id="expense-type-wrap" style="${cat && cat.flow==='Pengeluaran'?'':'display:none'}">
       <label class="f">Jenis Beban</label>
       <div class="seg">
-        <button type="button" class="seg-btn ${window._expenseType!=='OPEX'?'sel':''}" id="et-cogs" style="${window._expenseType!=='OPEX'?'background:#f59e0b':''}" onclick="selExpenseType('COGS')">Modal Barang</button>
-        <button type="button" class="seg-btn ${window._expenseType==='OPEX'?'sel':''}" id="et-opex" style="${window._expenseType==='OPEX'?'background:#f59e0b':''}" onclick="selExpenseType('OPEX')">Biaya Operasional</button>
+        <button type="button" class="seg-btn sel" id="et-cogs" style="background:#f59e0b" onclick="selExpenseType('COGS')">COGS (Pokok)</button>
+        <button type="button" class="seg-btn" id="et-opex" onclick="selExpenseType('OPEX')">OPEX (Operasional)</button>
       </div>
-    </div>
-
-    <div id="stock-target-wrap" style="${cat && cat.name==='Belanja Stok'?'':'display:none'}">
-      <label class="f">Nambah Stok ke Akun</label>
-      ${stockAccounts().length? `<div class="seg">
-        ${stockAccounts().map(a=>`<button type="button" class="seg-btn ${a.id===inputState.target_stock_id?'sel':''}"
-          style="${a.id===inputState.target_stock_id?`background:${ACC_COLOR[a.tipe]}`:''}"
-          onclick="selInputStockTarget(${a.id})">${esc(a.name)}</button>`).join('')}
-      </div>
-      <div class="hint">Nominal belanja ini otomatis nambah saldo/nilai stok akun yang dipilih, sekaligus kepotong dari akun dana di atas — kayak mutasi saldo, bukan cuma "uang hilang".</div>`
-      : `<div class="hint" style="color:var(--danger)">Belum ada akun bertipe Barang/Voucher Fisik. Tambah dulu di Setting sebelum input Belanja Stok.</div>`}
     </div>
 
     <label class="f">Deskripsi (jenis)</label>
@@ -743,17 +2006,9 @@ function selInputAccount(id){
   inputState.account_id=id;
   const cats = inputCategoriesFor(id);
   if(!cats.find(c=>c.id===inputState.category_id)) inputState.category_id = cats[0]?.id || null;
-  const cat = getCategory(inputState.category_id);
-  inputState.target_stock_id = cat && cat.name==='Belanja Stok' ? (inputState.target_stock_id || stockAccounts()[0]?.id || null) : null;
   rerenderInputPartial();
 }
-function selInputCategory(id){
-  inputState.category_id=id;
-  const cat = getCategory(id);
-  inputState.target_stock_id = cat && cat.name==='Belanja Stok' ? (inputState.target_stock_id || stockAccounts()[0]?.id || null) : null;
-  rerenderInputPartial();
-}
-function selInputStockTarget(id){ inputState.target_stock_id=id; rerenderInputPartial(); }
+function selInputCategory(id){ inputState.category_id=id; rerenderInputPartial(); }
 function selExpenseType(t){ window._expenseType=t;
   document.getElementById('et-cogs').classList.toggle('sel', t==='COGS');
   document.getElementById('et-cogs').style.background = t==='COGS' ? '#f59e0b' : '';
@@ -784,7 +2039,7 @@ function submitTransaksi(){
   const cat = getCategory(inputState.category_id);
   const jenis = document.getElementById('f-jenis').value.trim() || cat.name;
   const catatan = document.getElementById('f-catatan').value.trim();
-  const profit = cat.is_penjualan ? Number(document.getElementById('f-profit').value||0) : 0;
+  const profit = cat.flow==='Pemasukan' ? Number(document.getElementById('f-profit').value||0) : 0;
   const paymentStatus = inputState.payment_status;
   let pelanggan = '';
   if(paymentStatus==='unpaid'){
@@ -792,20 +2047,6 @@ function submitTransaksi(){
     if(!pelanggan) return toast('Isi nama pelanggan untuk transaksi kasbon','error');
     if(cat.flow!=='Pemasukan') return toast('Kasbon hanya berlaku untuk transaksi Pemasukan','error');
   }
-
-  // ---- Belanja Stok: bukan Pengeluaran biasa, tapi MUTASI nilai dari akun dana ke akun
-  // Barang/Voucher Fisik — jadi nominal belanja ikut nambah nilai stok, gak cuma ilang.
-  // (lihat fix gap "nominal belanja stok gak nambah ke akun Barang/Voucher") ----
-  const isStockPurchase = cat.name==='Belanja Stok';
-  let stockTargetAcc = null;
-  if(isStockPurchase){
-    stockTargetAcc = getAccount(inputState.target_stock_id);
-    if(!stockTargetAcc) return toast('Pilih akun tujuan stok (Barang/Voucher Fisik) dulu','error');
-  }
-  const txFlow = isStockPurchase ? 'Mutasi' : cat.flow;
-  const txTargetId = isStockPurchase ? stockTargetAcc.id : null;
-  const txExpenseType = isStockPurchase ? 'COGS' : ((cat.flow==='Pengeluaran' && !cat.is_penjualan) ? window._expenseType : null);
-
   // ---- mode EDIT: perbarui transaksi yang sudah ada, bukan buat baru ----
   if(editingTxId){
     const orig = DB.transactions.find(x=>x.id===editingTxId);
@@ -813,14 +2054,9 @@ function submitTransaksi(){
       toast('Transaksi sudah terkunci (Tutup Kasir), tidak bisa diedit lagi','error');
       editingTxId = null; return navigate('riwayat');
     }
-    if(isStockPurchase){
-      const today = todayStr();
-      const closingTgt = getLatestClosing(stockTargetAcc.id);
-      if(closingTgt && today <= closingTgt.tanggal) return toast('Akun tujuan stok sudah terkunci (Tutup Kasir)','error');
-    }
     Object.assign(orig, {
-      account_id: acc.id, target_account_id: txTargetId, kategori_id: cat.id, kategori: cat.name, jenis, flow: txFlow, is_penjualan: !!cat.is_penjualan, amount, profit,
-      catatan, expense_type: txExpenseType,
+      account_id: acc.id, kategori_id: cat.id, kategori: cat.name, jenis, flow: cat.flow, amount, profit,
+      catatan, expense_type: cat.flow==='Pengeluaran' ? window._expenseType : null,
       payment_status: paymentStatus, netral_arah: cat.flow==='Netral' ? (cat.arah||'+') : null,
     });
     runAudit(orig);
@@ -841,15 +2077,11 @@ function submitTransaksi(){
   const closing = getLatestClosing(acc.id);
   const today = todayStr();
   if(closing && today <= closing.tanggal) return toast('Tanggal ini sudah terkunci (Tutup Kasir). Gunakan transaksi penyesuaian.','error');
-  if(isStockPurchase){
-    const closingTgt = getLatestClosing(stockTargetAcc.id);
-    if(closingTgt && today <= closingTgt.tanggal) return toast('Akun tujuan stok sudah terkunci (Tutup Kasir)','error');
-  }
 
   const tx = {
-    id: uid('transactions'), tanggal: today, account_id: acc.id, target_account_id: txTargetId,
-    kategori_id: cat.id, kategori: cat.name, jenis, flow: txFlow, is_penjualan: !!cat.is_penjualan, amount, profit,
-    catatan, expense_type: txExpenseType,
+    id: uid('transactions'), tanggal: today, account_id: acc.id, target_account_id: null,
+    kategori_id: cat.id, kategori: cat.name, jenis, flow: cat.flow, amount, profit,
+    catatan, expense_type: cat.flow==='Pengeluaran' ? window._expenseType : null,
     payment_status: paymentStatus, netral_arah: cat.flow==='Netral' ? (cat.arah||'+') : null,
     kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at: nowIso()
   };
@@ -941,7 +2173,7 @@ function submitTransfer(){
   if(closingTgt && today <= closingTgt.tanggal) return toast('Akun tujuan sudah terkunci (Tutup Kasir)','error');
 
   const tx = {id: uid('transactions'), tanggal: today, account_id: sAcc.id, target_account_id: tAcc.id,
-    kategori_id:null, kategori:'Mutasi Saldo', jenis:'Pindah Saldo', flow:'Mutasi', is_penjualan:false, amount, profit:0,
+    kategori_id:null, kategori:'Mutasi Saldo', jenis:'Pindah Saldo', flow:'Mutasi', amount, profit:0,
     catatan, expense_type:null, payment_status:'paid', netral_arah:null,
     kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at: nowIso()};
   runAudit(tx);
@@ -1073,7 +2305,7 @@ function lunasiKasbon(id){
   if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa terima pelunasan hari ini','error');
   k.status='paid'; k.tanggal_lunas = today;
   const tx = {id:uid('transactions'), tanggal: today, account_id: cashAcc.id, target_account_id:null,
-    kategori_id:null, kategori:'Pelunasan Kasbon', jenis:'Pelunasan kasbon: '+k.nama_pelanggan, flow:'Pemasukan', is_penjualan:false,
+    kategori_id:null, kategori:'Pelunasan Kasbon', jenis:'Pelunasan kasbon: '+k.nama_pelanggan, flow:'Pemasukan',
     amount:k.amount, profit:0, catatan:'Pelunasan kasbon #'+k.id, expense_type:null, payment_status:'paid',
     netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
   DB.transactions.push(tx);
@@ -1081,19 +2313,6 @@ function lunasiKasbon(id){
 }
 
 /* ---------------- TUTUP KASIR ---------------- */
-function screenTutupKasirPilih(){
-  return `
-    <div class="card" style="cursor:pointer" onclick="navigate('tutupkasirseluruh')">
-      <div class="row-title" style="font-size:calc(15px * var(--fs-mult))">📦 Tutup Kasir Seluruh</div>
-      <div class="hint" style="margin:6px 0 0">Rekap & tutup SEMUA akun sekaligus dalam satu halaman — cocok buat penutupan harian rutin. Menampilkan saldo sistem tiap akun, ringkasan Modal Barang &amp; Biaya Operasional hari itu, dan kolom input saldo fisik per akun buat dibandingkan.</div>
-    </div>
-    <div class="card" style="cursor:pointer" onclick="navigate('tutupkasir')">
-      <div class="row-title" style="font-size:calc(15px * var(--fs-mult))">🧍 Tutup Kasir Sebagian</div>
-      <div class="hint" style="margin:6px 0 0">Tutup satu akun tertentu aja, satu-satu — cocok kalau cuma perlu tutup akun tertentu di luar jadwal rutin, atau susulan tanggal lampau.</div>
-    </div>
-  `;
-}
-
 let closingAccId = null;
 let closingTanggal = null;
 function screenTutupKasir(){
@@ -1139,19 +2358,6 @@ function updateSelisihPreview(saldoSistem){
   el.style.color = selisih===0 ? 'var(--success)' : 'var(--danger)';
   el.textContent = 'Selisih: ' + fmtRp(selisih) + (selisih===0? ' (sesuai)' : selisih>0 ? ' (lebih)' : ' (kurang)');
 }
-/* helper inti: push record closing + kunci transaksi akun itu s/d tanggal.
-   Dipakai baik oleh submitClosing (satu akun) maupun submitClosingSeluruh (banyak akun),
-   supaya logika locking & perhitungan selisih gak dobel-tulis. */
-function closeOneAccount(accountId, tanggal, fisik, catatan){
-  const saldoSistem = getSaldoAsOf(accountId, tanggal);
-  const selisih = fisik - saldoSistem;
-  DB.closings.push({id:uid('closings'), tanggal, account_id: accountId, saldo_sistem: saldoSistem,
-    saldo_fisik: fisik, selisih, catatan, waktu_tutup: nowIso()});
-  DB.transactions.forEach(t=>{
-    if((t.account_id===accountId || t.target_account_id===accountId) && t.tanggal<=tanggal) t.locked=1;
-  });
-  return {selisih, saldoSistem};
-}
 function submitClosing(saldoSistem){
   const tanggal = closingTanggal;
   const lastClosing = getLatestClosing(closingAccId);
@@ -1161,109 +2367,16 @@ function submitClosing(saldoSistem){
   const catatan = document.getElementById('f-closing-catatan').value.trim();
   const selisih = fisik - saldoSistem;
   if(!confirm('Tutup kasir untuk akun ini pada tanggal '+tanggal+'? Semua transaksi tanggal itu & sebelumnya pada akun ini akan terkunci permanen.')) return;
-  closeOneAccount(closingAccId, tanggal, fisik, catatan);
+  DB.closings.push({id:uid('closings'), tanggal, account_id: closingAccId, saldo_sistem: saldoSistem,
+    saldo_fisik: fisik, selisih, catatan, waktu_tutup: nowIso()});
+  DB.transactions.forEach(t=>{
+    if((t.account_id===closingAccId || t.target_account_id===closingAccId) && t.tanggal<=tanggal) t.locked=1;
+  });
   saveDB();
   closingTanggal = null;
   toast(selisih===0? 'Kasir ditutup, saldo sesuai' : 'Kasir ditutup, ada selisih '+fmtRp(selisih), selisih===0?'ok':'error');
   navigate('dashboard');
 }
-
-/* ---------------- TUTUP KASIR SELURUH (semua akun sekaligus) ---------------- */
-let seluruhTanggal = null;
-function screenTutupKasirSeluruh(){
-  const accs = activeAccounts();
-  if(!seluruhTanggal){
-    const candidates = accs.map(a=>defaultClosingDate(a.id)).sort();
-    seluruhTanggal = candidates[0] || todayStr();
-  }
-  const tanggal = seluruhTanggal;
-  const today = todayStr();
-
-  const rows = accs.map(a=>{
-    const lastClosing = getLatestClosing(a.id);
-    const alreadyClosed = lastClosing && tanggal<=lastClosing.tanggal;
-    const saldoSistem = getSaldoAsOf(a.id, tanggal);
-    if(alreadyClosed){
-      return `<div class="row-item">
-        <div class="row-main"><div class="row-title">${esc(a.name)}</div><div class="row-sub">${ACC_LABEL[a.tipe]} · sudah ditutup s/d ${esc(lastClosing.tanggal)}</div></div>
-        <div class="row-amt" style="color:var(--muted)">✅ dilewati</div>
-      </div>`;
-    }
-    return `<div class="card-sub" style="margin-bottom:10px">
-      <div class="lbl">${esc(a.name)} <span style="font-weight:400">· ${ACC_LABEL[a.tipe]}</span></div>
-      <div class="val" style="font-size:calc(15px * var(--fs-mult))">${fmtRp(saldoSistem)}</div>
-      <label class="f" style="margin-top:8px">Saldo Fisik</label>
-      <input type="text" inputmode="numeric" id="f-fisik-seluruh-${a.id}" placeholder="0" onfocus="scrollToMe(this)"
-        oninput="this.value=this.value.replace(/[^0-9]/g,''); updateSelisihSeluruh(${a.id}, ${saldoSistem})">
-      <div id="selisih-seluruh-${a.id}" class="hint"></div>
-    </div>`;
-  }).join('');
-
-  const eligible = accs.filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
-
-  const inDay = DB.transactions.filter(t=>t.tanggal===tanggal);
-  let cogsHari=0, opexHari=0, pendapatanHari=0;
-  inDay.forEach(t=>{
-    if(t.is_penjualan && t.payment_status==='paid') pendapatanHari += (t.profit||0);
-    if(t.expense_type){ if(t.expense_type==='COGS') cogsHari+=t.amount; else opexHari+=t.amount; }
-  });
-
-  return `
-    <label class="f" style="margin-top:0">Tanggal Tutup Kasir (semua akun)</label>
-    <input type="date" id="f-seluruh-tanggal" value="${tanggal}" max="${today}"
-      onchange="seluruhTanggal=this.value; document.getElementById('screen').innerHTML=screenTutupKasirSeluruh();">
-    <div class="hint">Cuma akun yang belum ditutup sampai tanggal ini yang diproses. Akun yang sudah ditutup otomatis dilewati (ditandai ✅).</div>
-
-    <div class="card-sub" style="margin-top:10px">
-      <div class="lbl">MODAL BARANG &amp; BIAYA OPERASIONAL — ${esc(tanggal)}</div>
-      <div class="hint" style="margin:4px 0 8px">
-        <b>Modal Barang</b>: uang yang keluar hari itu buat beli stok/barang dagangan (belanja stok) — bukan penjualan, bukan biaya rutin usaha.<br>
-        <b>Biaya Operasional</b>: pengeluaran rutin usaha hari itu (listrik, sewa, dll) yang bukan buat beli barang.<br>
-        Dua angka ini cuma referensi/konteks pas kamu hitung fisik — bukan bagian dari saldo akun manapun, jadi gak mempengaruhi perhitungan selisih di bawah.
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Modal Barang</span><b style="color:var(--danger)">-${fmtRp(cogsHari)}</b></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Biaya Operasional</span><b style="color:var(--danger)">-${fmtRp(opexHari)}</b></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Pendapatan (profit) hari ini</span><b style="color:var(--success)">${fmtRp(pendapatanHari)}</b></div>
-    </div>
-
-    <div class="section-title">Saldo per Akun</div>
-    ${rows}
-
-    <label class="f">Catatan (opsional, berlaku untuk semua akun yang ditutup di sesi ini)</label>
-    <textarea id="f-seluruh-catatan" onfocus="scrollToMe(this)"></textarea>
-    <div style="height:10px"></div>
-    ${eligible.length>0
-      ? `<button class="btn btn-danger" onclick="submitClosingSeluruh('${tanggal}')">Tutup Kasir Seluruh Akun (${eligible.length}) — ${esc(tanggal)}</button>`
-      : `<div class="hint" style="text-align:center">Semua akun sudah ditutup untuk tanggal ini.</div>`}
-  `;
-}
-function updateSelisihSeluruh(accId, saldoSistem){
-  const el = document.getElementById('f-fisik-seluruh-'+accId);
-  const fisik = Number(el.value||0);
-  const selisih = fisik - saldoSistem;
-  const out = document.getElementById('selisih-seluruh-'+accId);
-  out.style.color = selisih===0 ? 'var(--success)' : 'var(--danger)';
-  out.textContent = 'Selisih: ' + fmtRp(selisih) + (selisih===0? ' (sesuai)' : selisih>0 ? ' (lebih)' : ' (kurang)');
-}
-function submitClosingSeluruh(tanggal){
-  const eligible = activeAccounts().filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
-  if(!eligible.length) return toast('Tidak ada akun yang perlu ditutup','error');
-  if(tanggal>todayStr()) return toast('Tidak bisa menutup kasir untuk tanggal yang belum terjadi','error');
-  const catatan = document.getElementById('f-seluruh-catatan').value.trim();
-  const fisikMap = {};
-  eligible.forEach(a=>{ fisikMap[a.id] = Number((document.getElementById('f-fisik-seluruh-'+a.id)||{}).value||0); });
-  if(!confirm('Tutup kasir untuk '+eligible.length+' akun pada tanggal '+tanggal+'? Semua transaksi tanggal itu & sebelumnya pada akun-akun ini akan terkunci permanen.')) return;
-  let selisihCount = 0;
-  eligible.forEach(a=>{
-    const res = closeOneAccount(a.id, tanggal, fisikMap[a.id], catatan);
-    if(res.selisih!==0) selisihCount++;
-  });
-  saveDB();
-  seluruhTanggal = null;
-  toast(selisihCount===0 ? eligible.length+' akun ditutup, semua saldo sesuai' : eligible.length+' akun ditutup, '+selisihCount+' ada selisih', selisihCount===0?'ok':'error');
-  navigate('dashboard');
-}
-
 
 /* ---------------- LAPORAN ---------------- */
 function screenLaporan(){
@@ -1272,13 +2385,13 @@ function screenLaporan(){
   const inMonth = DB.transactions.filter(t=>t.tanggal.startsWith(monthPrefix));
   let pendapatan=0, cogs=0, opex=0;
   inMonth.forEach(t=>{
-    if(t.is_penjualan && t.payment_status==='paid') pendapatan += (t.profit||0);
-    if(t.expense_type){ if(t.expense_type==='COGS') cogs+=t.amount; else opex+=t.amount; }
+    if(t.flow==='Pemasukan' && t.payment_status==='paid') pendapatan += (t.profit||0);
+    if(t.flow==='Pengeluaran'){ if(t.expense_type==='COGS') cogs+=t.amount; else opex+=t.amount; }
   });
   const netProfit = pendapatan - cogs - opex;
 
   const perKategori = {};
-  inMonth.filter(t=>t.is_penjualan).forEach(t=>{
+  inMonth.filter(t=>t.flow==='Pemasukan').forEach(t=>{
     perKategori[t.kategori] = perKategori[t.kategori] || {amount:0, profit:0};
     perKategori[t.kategori].amount += t.amount; perKategori[t.kategori].profit += (t.profit||0);
   });
@@ -1288,8 +2401,8 @@ function screenLaporan(){
     <div class="section-title">Laba Rugi — ${monthPrefix}</div>
     <div class="card">
       <div class="row-item"><div class="row-main"><div class="row-title">Pendapatan Riil (profit)</div></div><div class="row-amt" style="color:var(--success)">${fmtRp(pendapatan)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title">Modal Barang</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(cogs)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title">Biaya Operasional</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Harga Pokok (COGS)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(cogs)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Beban Operasional (OPEX)</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
       <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:calc(15px * var(--fs-mult))">Laba Bersih</div></div><div class="row-amt" style="font-size:calc(16px * var(--fs-mult));color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmtRp(netProfit)}</div></div>
     </div>
 
@@ -1347,7 +2460,7 @@ function screenSettingHome(){
       <a class="setting-item" onclick="navigate('kasbon')"><span class="ic">🧾</span>Kasbon</a>
       <a class="setting-item" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan Laba Rugi</a>
       <a class="setting-item" onclick="navigate('audit')"><span class="ic">🔍</span>Audit Log</a>
-      <a class="setting-item" onclick="navigate('tutupkasirpilih')"><span class="ic">🔐</span>Tutup Kasir</a>
+      <a class="setting-item" onclick="navigate('tutupkasir')"><span class="ic">🔐</span>Tutup Kasir</a>
       <a class="setting-item" onclick="navigate('settingImportExport')"><span class="ic">⇅</span>Import / Export CSV</a>
       <a class="setting-item" onclick="navigate('settingFont')"><span class="ic">🔤</span>Ukuran Font</a>
     </div>
@@ -1387,15 +2500,15 @@ function screenSettingAkun(){
   return `
     <div class="card">
       <label class="f" style="margin-top:0">Nama Akun</label>
-      <input type="text" id="na-name" placeholder="mis. GoPay Toko" onfocus="scrollToMe(this)">
+      <input type="text" id="na-name" placeholder="mis. GoPay Toko">
       <label class="f">Tipe Akun</label>
       <select id="na-tipe">
         ${Object.entries(ACC_LABEL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
       </select>
       <label class="f">Saldo Awal</label>
-      <input type="text" id="na-saldo" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <input type="text" id="na-saldo" inputmode="numeric" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       <label class="f">Ambang Minimum (peringatan)</label>
-      <input type="text" id="na-ambang" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <input type="text" id="na-ambang" inputmode="numeric" placeholder="0" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       <div style="height:8px"></div>
       <button class="btn" onclick="addAkun()">Tambah Akun</button>
     </div>
@@ -1421,13 +2534,13 @@ function renderAkunEditRow(a){
   return `
     <div class="row-item" style="flex-direction:column;align-items:stretch;gap:6px;">
       <label class="f" style="margin-top:0">Nama Akun</label>
-      <input type="text" id="ea-name-${a.id}" value="${esc(a.name)}" onfocus="scrollToMe(this)">
+      <input type="text" id="ea-name-${a.id}" value="${esc(a.name)}">
       <label class="f">Tipe Akun</label>
       <select id="ea-tipe-${a.id}">
         ${Object.entries(ACC_LABEL).map(([k,v])=>`<option value="${k}" ${k===a.tipe?'selected':''}>${v}</option>`).join('')}
       </select>
       <label class="f">Ambang Minimum</label>
-      <input type="text" id="ea-ambang-${a.id}" inputmode="numeric" value="${a.ambang_minimum}" onfocus="scrollToMe(this)"
+      <input type="text" id="ea-ambang-${a.id}" inputmode="numeric" value="${a.ambang_minimum}"
         oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       <div class="hint">Saldo awal (${fmtRp(a.saldo_awal)}) sengaja tidak bisa diubah di sini, demi jejak audit. Kalau saldo sistem tidak cocok saldo nyata, buat transaksi penyesuaian lewat Input Transaksi — bukan mengubah angka ini langsung.</div>
       <div class="btn-row" style="gap:6px;margin-top:4px;">
@@ -1467,7 +2580,7 @@ function screenSettingKategori(){
   return `
     <div class="card">
       <label class="f" style="margin-top:0">Nama Kategori</label>
-      <input type="text" id="nk-name" placeholder="mis. Penjualan Aksesoris" onfocus="scrollToMe(this)">
+      <input type="text" id="nk-name" placeholder="mis. Penjualan Aksesoris">
       <label class="f">Flow (tidak bisa diubah setelah dibuat)</label>
       <div class="seg">
         <button type="button" class="seg-btn sel" id="nk-in" style="background:var(--success)" onclick="selNewCatFlow('Pemasukan')">Pemasukan</button>
@@ -1480,12 +2593,6 @@ function screenSettingKategori(){
           <button type="button" class="seg-btn sel" id="nk-arah-plus" onclick="selNewCatArah('+')">Menambah Saldo</button>
           <button type="button" class="seg-btn" id="nk-arah-minus" onclick="selNewCatArah('-')">Mengurangi Saldo</button>
         </div>
-      </div>
-      <label class="f">Termasuk Volume Penjualan?</label>
-      <div class="hint" style="margin-top:-4px;margin-bottom:6px;">Jasa/produk yang dijual ke customer (Tarik, Topup, pulsa, dst) = ya. Mutasi kas/setoran modal/prive = bukan.</div>
-      <div class="seg">
-        <button type="button" class="seg-btn sel" id="nk-jual-ya" style="background:var(--success)" onclick="selNewCatPenjualan(true)">Ya, Penjualan</button>
-        <button type="button" class="seg-btn" id="nk-jual-tidak" onclick="selNewCatPenjualan(false)">Bukan Penjualan</button>
       </div>
       <div style="height:8px"></div>
       <button class="btn" onclick="addKategori()">Tambah Kategori</button>
@@ -1502,7 +2609,6 @@ function renderKategoriRow(c){
     <div class="row-item">
       <div class="row-main"><div class="row-title">${esc(c.name)} ${c.aktif===0?'<span class="badge badge-netral">Nonaktif</span>':''}</div>
         <div class="row-sub">${flowBadge(c.flow)} ${c.flow==='Netral'? (c.arah==='-'?'(mengurangi saldo)':'(menambah saldo)') : ''}
-        <span class="badge ${c.is_penjualan?'badge-in':'badge-netral'}">${c.is_penjualan?'Penjualan':'Bukan Penjualan'}</span>
         · ${c.account_ids? esc(c.account_ids.map(id=>getAccount(id)?.name||'-').join(', ')) : 'Semua akun'}</div></div>
       <div class="btn-row" style="gap:10px">
         <button class="btn btn-sm" onclick="editingKategoriId=${c.id}; ekPending=null; document.getElementById('screen').innerHTML=screenSettingKategori();"> ✎ </button>
@@ -1512,18 +2618,13 @@ function renderKategoriRow(c){
     </div>`;
 }
 function renderKategoriEditRow(c){
-  if(!ekPending) ekPending = { allAccounts: !c.account_ids, ids: c.account_ids ? c.account_ids.slice() : [], is_penjualan: !!c.is_penjualan };
+  if(!ekPending) ekPending = { allAccounts: !c.account_ids, ids: c.account_ids ? c.account_ids.slice() : [] };
   const accs = activeAccounts();
   return `
     <div class="row-item" style="flex-direction:column;align-items:stretch;gap:6px;">
       <label class="f" style="margin-top:0">Nama Kategori</label>
-      <input type="text" id="ek-name-${c.id}" value="${esc(c.name)}" onfocus="scrollToMe(this)">
+      <input type="text" id="ek-name-${c.id}" value="${esc(c.name)}">
       <div class="hint">Flow (${c.flow}) tidak bisa diubah — kalau flow-nya salah dari awal, sebaiknya nonaktifkan kategori ini dan buat kategori baru dengan flow yang benar.</div>
-      <label class="f">Termasuk Volume Penjualan?</label>
-      <div class="seg">
-        <button type="button" class="seg-btn ${ekPending.is_penjualan?'sel':''}" style="${ekPending.is_penjualan?'background:var(--success)':''}" onclick="ekPending.is_penjualan=true; document.getElementById('screen').innerHTML=screenSettingKategori();">Ya, Penjualan</button>
-        <button type="button" class="seg-btn ${!ekPending.is_penjualan?'sel':''}" style="${!ekPending.is_penjualan?'background:var(--muted)':''}" onclick="ekPending.is_penjualan=false; document.getElementById('screen').innerHTML=screenSettingKategori();">Bukan Penjualan</button>
-      </div>
       <label class="f">Berlaku untuk Akun</label>
       <div class="seg" style="flex-wrap:wrap;">
         <button type="button" class="seg-btn ${ekPending.allAccounts?'sel':''}" onclick="ekToggleAll()">Semua Akun</button>
@@ -1552,7 +2653,6 @@ function saveEditKategori(id){
   const name = document.getElementById('ek-name-'+id).value.trim();
   if(!name) return toast('Nama kategori wajib diisi','error');
   c.name = name;
-  c.is_penjualan = !!ekPending.is_penjualan;
   c.account_ids = ekPending.allAccounts ? null : (ekPending.ids.length ? ekPending.ids : null);
   ekPending = null; editingKategoriId = null;
   saveDB();
@@ -1563,7 +2663,7 @@ function toggleKategori(id){
   const c = getCategory(id); c.aktif = c.aktif===0 ? 1 : 0; saveDB();
   document.getElementById('screen').innerHTML = screenSettingKategori();
 }
-window._newCatFlow = 'Pemasukan'; window._newCatArah = '+'; window._newCatPenjualan = true;
+window._newCatFlow = 'Pemasukan'; window._newCatArah = '+';
 function selNewCatFlow(f){
   window._newCatFlow = f;
   ['nk-in','nk-out','nk-net'].forEach(id=>document.getElementById(id).classList.remove('sel'));
@@ -1571,13 +2671,6 @@ function selNewCatFlow(f){
   const btn = document.getElementById(map[f]); btn.classList.add('sel'); btn.style.background = flowColor(f);
   ['nk-in','nk-out','nk-net'].forEach(id=>{ if(id!==map[f]) document.getElementById(id).style.background=''; });
   document.getElementById('nk-arah-wrap').style.display = f==='Netral' ? '' : 'none';
-}
-function selNewCatPenjualan(v){
-  window._newCatPenjualan = v;
-  document.getElementById('nk-jual-ya').classList.toggle('sel', v===true);
-  document.getElementById('nk-jual-ya').style.background = v===true ? 'var(--success)' : '';
-  document.getElementById('nk-jual-tidak').classList.toggle('sel', v===false);
-  document.getElementById('nk-jual-tidak').style.background = v===false ? 'var(--muted)' : '';
 }
 function selNewCatArah(a){
   window._newCatArah = a;
@@ -1589,7 +2682,7 @@ function selNewCatArah(a){
 function addKategori(){
   const name = document.getElementById('nk-name').value.trim();
   if(!name) return toast('Nama kategori wajib diisi','error');
-  DB.categories.push({id:uid('categories'), name, flow:window._newCatFlow, is_penjualan: !!window._newCatPenjualan,
+  DB.categories.push({id:uid('categories'), name, flow:window._newCatFlow,
     arah: window._newCatFlow==='Netral' ? window._newCatArah : undefined});
   saveDB(); toast('Kategori ditambahkan','ok'); document.getElementById('screen').innerHTML = screenSettingKategori();
 }
@@ -1604,9 +2697,9 @@ function screenSettingKasir(){
   return `
     <div class="card">
       <label class="f" style="margin-top:0">Nama Kasir Baru</label>
-      <input type="text" id="nks-name" placeholder="mis. Budi" onfocus="scrollToMe(this)">
+      <input type="text" id="nks-name" placeholder="mis. Budi">
       <label class="f">PIN (4-6 digit, opsional — kosongkan untuk tanpa PIN)</label>
-      <input type="text" id="nks-pin" inputmode="numeric" maxlength="6" placeholder="Kosongkan = tanpa PIN" onfocus="scrollToMe(this)"
+      <input type="text" id="nks-pin" inputmode="numeric" maxlength="6" placeholder="Kosongkan = tanpa PIN"
         oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       <div style="height:8px"></div>
       <button class="btn" onclick="addKasir()">Tambah Kasir</button>
@@ -1735,9 +2828,9 @@ function importCsv(){
         if(isUnpaid && !row.nama_pelanggan) throw new Error('nama_pelanggan wajib untuk kasbon');
         const tanggal = row.tanggal || todayStr();
         const tx = {id:uid('transactions'), tanggal, account_id:acc.id, target_account_id:null,
-          kategori_id:cat.id, kategori:cat.name, jenis: row.jenis||cat.name, flow:cat.flow, is_penjualan: !!cat.is_penjualan,
+          kategori_id:cat.id, kategori:cat.name, jenis: row.jenis||cat.name, flow:cat.flow,
           amount, profit: Number(row.profit||0), catatan: row.catatan||'',
-          expense_type: (cat.flow==='Pengeluaran' && !cat.is_penjualan) ? 'OPEX' : null,
+          expense_type: cat.flow==='Pengeluaran' ? 'OPEX' : null,
           payment_status: isUnpaid?'unpaid':'paid', netral_arah: cat.flow==='Netral'?(cat.arah||'+'):null,
           kasir_id: DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
         runAudit(tx);
@@ -1775,8 +2868,8 @@ function renderLockSetup(){
       <div class="lock-title">Kasir Front House</div>
       <div class="lock-sub">Buat kasir pertama untuk mulai</div>
       <div style="width:100%;max-width:280px;">
-        <input type="text" id="setup-nama" placeholder="Nama kasir" style="margin-bottom:10px;" onfocus="scrollToMe(this)">
-        <input type="text" id="setup-pin" inputmode="numeric" maxlength="6" placeholder="PIN (opsional)" onfocus="scrollToMe(this)"
+        <input type="text" id="setup-nama" placeholder="Nama kasir" style="margin-bottom:10px;">
+        <input type="text" id="setup-pin" inputmode="numeric" maxlength="6" placeholder="PIN (opsional)"
           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         <div style="height:12px"></div>
         <button class="btn" onclick="setupFirstKasir()">Mulai</button>
@@ -1853,3 +2946,6 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
+</file>
+
+</files>
