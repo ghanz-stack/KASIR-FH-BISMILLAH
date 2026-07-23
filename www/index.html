@@ -101,7 +101,7 @@ textarea{resize:vertical; min-height:56px;}
 .seg{display:flex; flex-wrap:wrap; gap:7px;}
 .seg-btn{padding:9px 13px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-size:calc(13px * var(--fs-mult));
   font-weight:600; color:var(--text);}
-.seg-btn.sel{color:#fff; border-color:transparent;}
+.seg-btn.sel{color:#fff; border-color:transparent; background:var(--primary);}
 .hint{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:4px;}
 
 /* Keypad */
@@ -310,6 +310,7 @@ function loadDB(){
   }
   if(migrateTopupRename()) saveDB();
   if(migrateExpenseTypeFix()) saveDB();
+  if(migrateStockMutasiExpenseTypeFix()) saveDB();
 }
 function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
 
@@ -390,6 +391,21 @@ function migrateExpenseTypeFix(){
   return changed;
 }
 
+/* ---------- migrasi satu-kali: hapus expense_type dari transaksi Belanja Stok (Mutasi) ----------
+   Fix sebelumnya bikin Belanja Stok jadi flow='Mutasi' (uang -> nilai stok, benar), tapi masih
+   nempel expense_type='COGS' di transaksi itu — jadi Laba Rugi motong modal DUA KALI: sekali di
+   margin/profit tiap penjualan dari stok itu, sekali lagi di sini. Transaksi Mutasi bukan expense
+   P&L, jadi expense_type-nya harus null. */
+function migrateStockMutasiExpenseTypeFix(){
+  if(DB.migratedStockMutasiExpenseTypeFix) return false;
+  let changed = false;
+  DB.transactions.forEach(t=>{
+    if(t.flow==='Mutasi' && t.expense_type){ t.expense_type = null; changed = true; }
+  });
+  DB.migratedStockMutasiExpenseTypeFix = true;
+  return changed;
+}
+
 /* ---------- getters ---------- */
 function getAccount(id){ return DB.accounts.find(a=>a.id===id); }
 function getCategory(id){ return DB.categories.find(c=>c.id===id); }
@@ -404,12 +420,19 @@ function getLatestClosing(accountId){
   const list = DB.closings.filter(c=>c.account_id===accountId).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
   return list[0] || null;
 }
+/* closing terakhir yg <= tanggal yg diminta — beda dari getLatestClosing() yang selalu
+   ambil closing paling baru walau tanggalnya di MASA DEPAN dari `tanggal` yg diminta.
+   Dipakai tiap kali butuh saldo/breakdown "per posisi tanggal X", bukan "per hari ini". */
+function getClosingAsOf(accountId, tanggal){
+  return DB.closings.filter(c=>c.account_id===accountId && c.tanggal<=tanggal)
+    .sort((a,b)=>b.tanggal.localeCompare(a.tanggal))[0] || null;
+}
 function getSaldo(accountId){ return getSaldoAsOf(accountId, todayStr()); }
 /* saldo per posisi akhir tanggal tertentu (dipakai Tutup Kasir susulan agar transaksi
    SETELAH tanggal yang ditutup tidak ikut kehitung/kekunci) */
 function getSaldoAsOf(accountId, tanggal){
   const acc = getAccount(accountId); if(!acc) return 0;
-  const closing = getLatestClosing(accountId);
+  const closing = getClosingAsOf(accountId, tanggal);
   let base = closing ? closing.saldo_fisik : acc.saldo_awal;
   const afterDate = closing ? closing.tanggal : null;
   let total = base;
@@ -572,14 +595,32 @@ function renderScreen(screen){
 }
 
 /* ---------------- DASHBOARD ---------------- */
+let dashRangeStart = null, dashRangeEnd = null, dashRangePreset = 'today';
+function setDashRange(preset){
+  const today = todayStr();
+  dashRangePreset = preset;
+  if(preset==='today'){ dashRangeStart=today; dashRangeEnd=today; }
+  else if(preset==='week'){
+    const d = new Date(today+'T00:00:00Z');
+    const diffToMonday = (d.getUTCDay()===0? 6 : d.getUTCDay()-1);
+    dashRangeStart = addDays(today, -diffToMonday); dashRangeEnd = today;
+  } else if(preset==='month'){ dashRangeStart = today.slice(0,7)+'-01'; dashRangeEnd = today; }
+  document.getElementById('screen').innerHTML = screenDashboard();
+}
 function screenDashboard(){
   const today = todayStr();
+  if(!dashRangeStart) dashRangeStart = today;
+  if(!dashRangeEnd) dashRangeEnd = today;
   let pendapatanRiil=0, volume=0;
   for(const t of DB.transactions){
-    if(t.tanggal!==today) continue;
+    if(t.tanggal < dashRangeStart || t.tanggal > dashRangeEnd) continue;
     if(t.is_penjualan && t.payment_status==='paid') pendapatanRiil += (t.profit||0);
     if(t.is_penjualan) volume += t.amount;
   }
+  const rangeLabel = dashRangeStart===dashRangeEnd ? esc(dashRangeStart) : `${esc(dashRangeStart)} s/d ${esc(dashRangeEnd)}`;
+  const totalSaldo = activeAccounts().filter(a=>a.tipe!=='cash').reduce((sum,a)=>sum+getSaldo(a.id), 0);
+  const cashAcc = activeAccounts().find(a=>a.tipe==='cash');
+  const totalCash = cashAcc ? getSaldo(cashAcc.id) : 0;
   const alerts = [];
   for(const a of activeAccounts()){
     const s = getSaldo(a.id);
@@ -595,12 +636,31 @@ function screenDashboard(){
   for(const a of activeAccounts()){ (byTipe[a.tipe]=byTipe[a.tipe]||[]).push(a); }
 
   return `
+    <div class="seg" style="margin-bottom:8px">
+      <button type="button" class="seg-btn ${dashRangePreset==='today'?'sel':''}" onclick="setDashRange('today')">Hari Ini</button>
+      <button type="button" class="seg-btn ${dashRangePreset==='week'?'sel':''}" onclick="setDashRange('week')">Minggu Ini</button>
+      <button type="button" class="seg-btn ${dashRangePreset==='month'?'sel':''}" onclick="setDashRange('month')">Bulan Ini</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="date" id="dash-start" value="${dashRangeStart}" max="${today}"
+        onchange="dashRangeStart=this.value; dashRangePreset='custom'; document.getElementById('screen').innerHTML=screenDashboard();">
+      <input type="date" id="dash-end" value="${dashRangeEnd}" max="${today}" min="${dashRangeStart}"
+        onchange="dashRangeEnd=this.value; dashRangePreset='custom'; document.getElementById('screen').innerHTML=screenDashboard();">
+    </div>
+    <div class="card-hero" style="background:linear-gradient(135deg,var(--primary-dark),var(--primary))">
+      <div class="lbl">TOTAL SALDO SAAT INI</div>
+      <div class="val">${fmtRp(totalSaldo)}</div>
+    </div>
+    ${cashAcc? ` <div class="card-hero">
+      <div class="lbl">TOTAL CASH</div>
+      <div class="val">${fmtRp(totalCash)}</div>
+    </div>` : ''}
     <div class="card-hero">
-      <div class="lbl">PENDAPATAN RIIL HARI INI</div>
+      <div class="lbl">PENDAPATAN RIIL — ${rangeLabel}</div>
       <div class="val">${fmtRp(pendapatanRiil)}</div>
     </div>
     <div class="card-sub">
-      <div class="lbl">VOLUME PENJUALAN HARI INI &nbsp;<span title="Total nilai transaksi penjualan/jasa (Tarik, Topup, produk PPOB, barang). Mutasi kas & pindah saldo antar akun tidak termasuk.">ⓘ</span></div>
+      <div class="lbl">VOLUME PENJUALAN — ${rangeLabel} &nbsp;<span title="Total nilai transaksi penjualan/jasa (Tarik, Topup, produk PPOB, barang). Mutasi kas & pindah saldo antar akun tidak termasuk.">ⓘ</span></div>
       <div class="val" style="color:var(--muted)">${fmtRp(volume)}</div>
       <div class="hint">Nilai transaksi penjualan/jasa, bukan pendapatan bersih Anda.</div>
     </div>
@@ -775,6 +835,33 @@ function rerenderInputPartial(){
 }
 function scrollToMe(el){ setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'center'}), 150); }
 
+/* ---------------- MIRROR CASH (otomatis dari transaksi Penjualan) ----------------
+   Kenapa account_id/target_account_id salah satu sengaja null: akun sumber transaksi
+   asli (DANA/Shopeepay/dst) SUDAH kepotong/nambah lewat transaksi aslinya sendiri —
+   kalau mirror ini ikut nyantol ke akun sumber juga, saldo akun itu keitung 2x.
+   Mirror ini cuma nyentuh Cash, seolah uang fisik itu "muncul dari luar sistem"
+   (dari kantong customer) — itu memang yang beneran kejadian.
+   Tarik/Tarik Tunai dikecualikan: itu agen KASIH cash ke customer, jadi Cash
+   berkurang, bukan nambah. Kasbon (belum lunas) dilewati — cash-nya baru masuk
+   pas dilunasi lewat lunasiKasbon() yang sudah punya jalur sendiri. */
+function syncCashMirror(tx, cat){
+  DB.transactions = DB.transactions.filter(t=>t.mirror_of!==tx.id); // rebuild dari nol, aman buat edit
+  if(!cat.is_penjualan || tx.payment_status!=='paid') return;
+  const cashAcc = DB.accounts.find(a=>a.tipe==='cash');
+  if(!cashAcc || cashAcc.id===tx.account_id) return; // transaksi Cash sendiri gak perlu di-mirror ke dirinya
+  const isTarik = /^tarik/i.test(cat.name);
+  DB.transactions.push({
+    id: uid('transactions'), tanggal: tx.tanggal,
+    account_id: isTarik ? cashAcc.id : null,
+    target_account_id: isTarik ? null : cashAcc.id,
+    kategori_id: null, kategori: cat.name, jenis: 'Mutasi Cash: '+tx.jenis,
+    flow: 'Mutasi', is_penjualan: false, amount: tx.amount, profit: 0,
+    catatan: 'Otomatis dari transaksi #'+tx.id, expense_type: null,
+    payment_status: 'paid', netral_arah: null,
+    kasir_id: tx.kasir_id, locked: 0, flag_suspect: 0, suspect_reasons: '',
+    created_at: nowIso(), mirror_of: tx.id
+  });
+}
 function submitTransaksi(){
   if(!inputState.account_id) return toast('Pilih akun dulu','error');
   if(!inputState.category_id) return toast('Pilih kategori dulu','error');
@@ -804,13 +891,22 @@ function submitTransaksi(){
   }
   const txFlow = isStockPurchase ? 'Mutasi' : cat.flow;
   const txTargetId = isStockPurchase ? stockTargetAcc.id : null;
-  const txExpenseType = isStockPurchase ? 'COGS' : ((cat.flow==='Pengeluaran' && !cat.is_penjualan) ? window._expenseType : null);
+  // Belanja Stok = mutasi aset (uang -> nilai stok), BUKAN expense P&L — ongkosnya udah otomatis
+  // "terpakai" lewat margin/profit tiap kali barang dari stok itu terjual. Kalau expense_type
+  // ikut ditempel di sini, Laba Rugi bakal motong modal DUA KALI (sekali di margin, sekali lagi
+  // di sini). Makanya null, bukan 'COGS'.
+  const txExpenseType = isStockPurchase ? null : ((cat.flow==='Pengeluaran' && !cat.is_penjualan) ? window._expenseType : null);
 
   // ---- mode EDIT: perbarui transaksi yang sudah ada, bukan buat baru ----
   if(editingTxId){
     const orig = DB.transactions.find(x=>x.id===editingTxId);
     if(!orig || orig.locked){
       toast('Transaksi sudah terkunci (Tutup Kasir), tidak bisa diedit lagi','error');
+      editingTxId = null; return navigate('riwayat');
+    }
+    const linkedMirror = DB.transactions.find(m=>m.mirror_of===orig.id);
+    if(linkedMirror && linkedMirror.locked){
+      toast('Mutasi Cash terkait sudah terkunci (Tutup Kasir), tidak bisa diedit lagi','error');
       editingTxId = null; return navigate('riwayat');
     }
     if(isStockPurchase){
@@ -829,6 +925,7 @@ function submitTransaksi(){
       DB.kasbon.push({id:uid('kasbon'), transaction_id:orig.id, nama_pelanggan:pelanggan, account_id:acc.id,
         amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan});
     }
+    syncCashMirror(orig, cat);
     saveDB();
     const backId = orig.id; editingTxId = null;
     toast(orig.flag_suspect ? 'Diperbarui, tapi ditandai audit: '+orig.suspect_reasons : 'Transaksi diperbarui', orig.flag_suspect?'error':'ok');
@@ -859,6 +956,7 @@ function submitTransaksi(){
     DB.kasbon.push({id:uid('kasbon'), transaction_id:tx.id, nama_pelanggan:pelanggan, account_id:acc.id,
       amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan});
   }
+  syncCashMirror(tx, cat);
   saveDB();
   toast(tx.flag_suspect ? 'Tersimpan, tapi ditandai audit: '+tx.suspect_reasons : 'Transaksi tersimpan', tx.flag_suspect?'error':'ok');
   navigate('dashboard');
@@ -954,21 +1052,43 @@ function submitTransfer(){
 /* ---------------- RIWAYAT ---------------- */
 let riwayatFilter = 'all';
 let riwayatLimit = 30;
-function screenRiwayat(){
+let riwayatSearch = '';
+function riwayatFilteredList(){
   let list = DB.transactions.slice().sort((a,b)=> (b.tanggal+String(b.id).padStart(6,'0')).localeCompare(a.tanggal+String(a.id).padStart(6,'0')));
-  if(riwayatFilter!=='all') list = list.filter(t=>t.flow===riwayatFilter);
-  const shown = list.slice(0, riwayatLimit);
-  const tabs = [['all','Semua'],['Pemasukan','Masuk'],['Pengeluaran','Keluar'],['Mutasi','Mutasi'],['Netral','Netral']];
+  if(riwayatFilter==='penjualan') list = list.filter(t=>t.flow==='Pemasukan'||t.flow==='Pengeluaran');
+  else if(riwayatFilter!=='all') list = list.filter(t=>t.flow===riwayatFilter);
+  const q = riwayatSearch.trim().toLowerCase();
+  if(q) list = list.filter(t=>{
+    const acc = getAccount(t.account_id), tgt = getAccount(t.target_account_id);
+    return [t.jenis, t.kategori, t.catatan, acc?.name, tgt?.name].some(v=>v && String(v).toLowerCase().includes(q));
+  });
+  return list;
+}
+function screenRiwayat(){
+  const tabs = [['all','Semua'],['penjualan','Penjualan'],['Mutasi','Mutasi'],['Netral','Netral']];
   return `
+    <div class="card" style="padding:2px 14px;margin-bottom:8px;">
+      <input type="text" id="riwayat-search" placeholder="🔍 Cari transaksi (jenis, akun, catatan)..." value="${esc(riwayatSearch)}"
+        oninput="riwayatSearch=this.value; riwayatLimit=30; renderRiwayatBody();"
+        style="width:100%;border:none;outline:none;background:transparent;color:var(--text);padding:12px 0;font-size:calc(14px * var(--fs-mult));">
+    </div>
     <div class="tabs">
       ${tabs.map(([id,label])=>`<div class="tab ${riwayatFilter===id?'sel':''}" onclick="setRiwayatFilter('${id}')">${label}</div>`).join('')}
     </div>
-    <div class="card" style="padding:6px 14px;">
-      ${shown.length? shown.map(t=>renderTxRow(t)).join('') : `<div class="empty-state"><div class="ic">📭</div>Belum ada transaksi.</div>`}
-    </div>
-    ${list.length > shown.length ? `<button class="btn btn-outline" onclick="riwayatLimit+=30; document.getElementById('screen').innerHTML=screenRiwayat();">Muat Lebih Banyak</button>` : ''}
+    <div id="riwayat-body">${riwayatBodyHTML()}</div>
   `;
 }
+function riwayatBodyHTML(){
+  const list = riwayatFilteredList();
+  const shown = list.slice(0, riwayatLimit);
+  return `
+    <div class="card" style="padding:6px 14px;">
+      ${shown.length? shown.map(t=>renderTxRow(t)).join('') : `<div class="empty-state"><div class="ic">📭</div>Tidak ada transaksi.</div>`}
+    </div>
+    ${list.length > shown.length ? `<button class="btn btn-outline" onclick="riwayatLimit+=30; renderRiwayatBody();">Muat Lebih Banyak</button>` : ''}
+  `;
+}
+function renderRiwayatBody(){ document.getElementById('riwayat-body').innerHTML = riwayatBodyHTML(); }
 function setRiwayatFilter(f){ riwayatFilter=f; riwayatLimit=30; document.getElementById('screen').innerHTML = screenRiwayat(); }
 function renderTxRow(t){
   const acc = getAccount(t.account_id);
@@ -1017,6 +1137,7 @@ let editingTxId = null;
 function startEditTx(id){
   const t = DB.transactions.find(x=>x.id===id);
   if(!t || t.locked) return toast('Transaksi terkunci, tidak bisa diedit','error');
+  if(t.mirror_of) return toast('Ini mutasi Cash otomatis — edit transaksi penjualan aslinya, mutasi ini ikut menyesuaikan','error');
   editingTxId = id;
   kpValue = String(t.amount);
   inputState = {account_id: t.account_id, category_id: t.kategori_id, payment_status: t.payment_status};
@@ -1026,8 +1147,11 @@ function startEditTx(id){
 function deleteTx(id){
   const t = DB.transactions.find(x=>x.id===id);
   if(!t || t.locked) return toast('Transaksi terkunci, tidak bisa dihapus','error');
+  if(t.mirror_of) return toast('Ini mutasi Cash otomatis — hapus transaksi penjualan aslinya, mutasi ini ikut terhapus','error');
+  const linkedMirror = DB.transactions.find(m=>m.mirror_of===id);
+  if(linkedMirror && linkedMirror.locked) return toast('Mutasi Cash terkait sudah terkunci (Tutup Kasir), tidak bisa dihapus','error');
   if(!confirm('Hapus transaksi ini?')) return;
-  DB.transactions = DB.transactions.filter(x=>x.id!==id);
+  DB.transactions = DB.transactions.filter(x=>x.id!==id && x.mirror_of!==id);
   DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==id);
   saveDB(); toast('Transaksi dihapus','ok'); navigate('riwayat');
 }
@@ -1085,7 +1209,7 @@ function screenTutupKasirPilih(){
   return `
     <div class="card" style="cursor:pointer" onclick="navigate('tutupkasirseluruh')">
       <div class="row-title" style="font-size:calc(15px * var(--fs-mult))">📦 Tutup Kasir Seluruh</div>
-      <div class="hint" style="margin:6px 0 0">Rekap & tutup SEMUA akun sekaligus dalam satu halaman — cocok buat penutupan harian rutin. Menampilkan saldo sistem tiap akun, ringkasan Modal Barang &amp; Biaya Operasional hari itu, dan kolom input saldo fisik per akun buat dibandingkan.</div>
+      <div class="hint" style="margin:6px 0 0">Rekap & tutup SEMUA akun sekaligus dalam satu halaman — cocok buat penutupan harian rutin. Menampilkan saldo sistem tiap akun + totalnya, ringkasan Modal Barang &amp; Biaya Operasional hari itu, lalu tinggal masukin satu angka saldo fisik gabungan buat dibandingkan ke total.</div>
     </div>
     <div class="card" style="cursor:pointer" onclick="navigate('tutupkasir')">
       <div class="row-title" style="font-size:calc(15px * var(--fs-mult))">🧍 Tutup Kasir Sebagian</div>
@@ -1109,7 +1233,7 @@ function screenTutupKasir(){
   return `
     <label class="f">Pilih Akun</label>
     <div class="seg">
-      ${activeAccounts().map(a=>`<button type="button" class="seg-btn ${a.id===closingAccId?'sel':''}"
+      ${activeAccounts().filter(a=>a.tipe!=='cash').map(a=>`<button type="button" class="seg-btn ${a.id===closingAccId?'sel':''}"
         style="${a.id===closingAccId?`background:${ACC_COLOR[a.tipe]}`:''}"
         onclick="closingAccId=${a.id}; closingTanggal=null; document.getElementById('screen').innerHTML=screenTutupKasir();">${esc(a.name)}</button>`).join('')}
     </div>
@@ -1118,9 +1242,10 @@ function screenTutupKasir(){
       onchange="closingTanggal=this.value; document.getElementById('screen').innerHTML=screenTutupKasir();">
     ${isBackfill? `<div class="hint" style="color:var(--warning)">⚠ Ini penutupan susulan untuk tanggal lampau (lupa tutup kemarin). Saldo sistem di bawah dihitung sampai akhir <b>${closingTanggal}</b> saja — transaksi setelah tanggal ini (termasuk yang sudah Anda input hari ini) TIDAK ikut dihitung maupun ikut terkunci.</div>` : ''}
     <div class="card-sub">
-      <div class="lbl">SALDO SISTEM PER AKHIR ${esc(closingTanggal)}</div>
+      <div class="lbl">${acc && acc.tipe==='cash' ? 'SALDO CASH (PEMBANDING) PER AKHIR' : 'SALDO SISTEM PER AKHIR'} ${esc(closingTanggal)}</div>
       <div class="val">${fmtRp(saldoSistem)}</div>
     </div>
+    ${acc && acc.tipe==='cash' ? cashOriginBreakdownHTML(acc.id, closingTanggal) : cashContributionFromAccountHTML(acc, closingTanggal)}
     ${relatedKasbon.length? `<div class="hint" style="color:var(--warning)">Ada ${relatedKasbon.length} kasbon belum lunas pada tanggal ini terkait akun ini — selisih terkait ini tidak otomatis dianggap kecurangan.</div>`:''}
     <label class="f">Saldo Fisik (hasil hitung nyata)</label>
     <input type="text" id="f-saldofisik" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)"
@@ -1131,6 +1256,51 @@ function screenTutupKasir(){
     <div style="height:10px"></div>
     <button class="btn btn-danger" onclick="submitClosing(${saldoSistem})">Tutup Kasir Akun Ini — ${esc(closingTanggal)}</button>
   `;
+}
+function cashContributionFromAccountHTML(acc, tanggal){
+  if(!acc) return '';
+  const cashAcc = DB.accounts.find(a=>a.tipe==='cash');
+  if(!cashAcc || cashAcc.id===acc.id) return '';
+  const closing = getClosingAsOf(cashAcc.id, tanggal);
+  const afterDate = closing ? closing.tanggal : null;
+  let total = 0;
+  for(const t of DB.transactions){
+    if(!t.mirror_of) continue;
+    if(afterDate && t.tanggal<=afterDate) continue;
+    if(t.tanggal>tanggal) continue;
+    const orig = DB.transactions.find(x=>x.id===t.mirror_of);
+    if(!orig || orig.account_id!==acc.id) continue;
+    if(t.account_id===cashAcc.id) total -= t.amount;
+    else if(t.target_account_id===cashAcc.id) total += t.amount;
+  }
+  if(!total) return '';
+  return `
+    <div class="card-sub">
+      <div class="lbl">CASH PEMBANDING DARI ${esc(acc.name).toUpperCase()}</div>
+      <div class="val" style="color:${total>=0?'var(--success)':'var(--danger)'}">${total>=0?'+':''}${fmtRp(total)}</div>
+      <div class="hint">Bagian dari total Cash yang asalnya dari transaksi penjualan akun ini.</div>
+    </div>`;
+}
+function cashOriginBreakdownHTML(cashAccountId, tanggal){
+  const closing = getClosingAsOf(cashAccountId, tanggal);
+  const afterDate = closing ? closing.tanggal : null;
+  const map = {};
+  for(const t of DB.transactions){
+    if(!t.mirror_of) continue;
+    if(afterDate && t.tanggal<=afterDate) continue;
+    if(t.tanggal>tanggal) continue;
+    if(t.account_id===cashAccountId) map[t.kategori] = (map[t.kategori]||0) - t.amount;
+    else if(t.target_account_id===cashAccountId) map[t.kategori] = (map[t.kategori]||0) + t.amount;
+  }
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length) return '';
+  return `
+    <div class="section-title">Asal Usul Cash (dari Transaksi Penjualan)</div>
+    <div class="card" style="padding:6px 14px;">
+      ${entries.map(([kategori,total])=>`
+        <div class="row-item"><div class="row-main"><div class="row-title">${esc(kategori)}</div></div>
+        <div class="row-amt" style="color:${total>=0?'var(--success)':'var(--danger)'}">${total>=0?'+':''}${fmtRp(total)}</div></div>`).join('')}
+    </div>`;
 }
 function updateSelisihPreview(saldoSistem){
   const fisik = Number(document.getElementById('f-saldofisik').value||0);
@@ -1168,44 +1338,74 @@ function submitClosing(saldoSistem){
   navigate('dashboard');
 }
 
-/* ---------------- TUTUP KASIR SELURUH (semua akun sekaligus) ---------------- */
+/* ---------------- TUTUP KASIR SELURUH (semua akun sekaligus) ----------------
+   Desain: user CUMA hitung fisik SEKALI secara total (gabungan semua akun),
+   bukan per akun satu-satu. Per akun cuma ditampilkan info saldo sistemnya aja
+   (read-only) buat referensi, lalu dibandingkan ke satu angka fisik gabungan.
+   Closing record per akun tetap dibuat (locking & checkpoint saldo lanjutan
+   butuh itu), dengan saldo_fisik = saldo_sistem masing-masing (gak ada cara
+   pisahin selisih ke akun mana secara individual dari input gabungan) —
+   selisih TOTAL yang beneran mau dicek user ditulis di catatan tiap record. */
 let seluruhTanggal = null;
 function screenTutupKasirSeluruh(){
   const accs = activeAccounts();
+  const nonCashAccs = accs.filter(a=>a.tipe!=='cash');
   if(!seluruhTanggal){
-    const candidates = accs.map(a=>defaultClosingDate(a.id)).sort();
+    const candidates = nonCashAccs.map(a=>defaultClosingDate(a.id)).sort();
     seluruhTanggal = candidates[0] || todayStr();
   }
   const tanggal = seluruhTanggal;
   const today = todayStr();
 
-  const rows = accs.map(a=>{
+  // Cash SENGAJA dikeluarkan dari eligible/total: dia cuma kartu pembanding di sini,
+  // penutupannya sendiri lewat Tutup Kasir Sebagian — kalau ikut kehitung di sini,
+  // TOTAL SALDO SISTEM jadi gak nyambung sama daftar akun non-cash yang ditampilkan
+  // di atasnya, dan gak apple-to-apple sama TOTAL SALDO SAAT INI di dashboard.
+  const eligible = nonCashAccs.filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
+  const totalSistem = eligible.reduce((s,a)=>s+getSaldoAsOf(a.id, tanggal), 0);
+
+  const cashAcc = accs.find(a=>a.tipe==='cash');
+
+  const rows = nonCashAccs.map(a=>{
     const lastClosing = getLatestClosing(a.id);
     const alreadyClosed = lastClosing && tanggal<=lastClosing.tanggal;
-    const saldoSistem = getSaldoAsOf(a.id, tanggal);
     if(alreadyClosed){
       return `<div class="row-item">
         <div class="row-main"><div class="row-title">${esc(a.name)}</div><div class="row-sub">${ACC_LABEL[a.tipe]} · sudah ditutup s/d ${esc(lastClosing.tanggal)}</div></div>
         <div class="row-amt" style="color:var(--muted)">✅ dilewati</div>
       </div>`;
     }
-    return `<div class="card-sub" style="margin-bottom:10px">
-      <div class="lbl">${esc(a.name)} <span style="font-weight:400">· ${ACC_LABEL[a.tipe]}</span></div>
-      <div class="val" style="font-size:calc(15px * var(--fs-mult))">${fmtRp(saldoSistem)}</div>
-      <label class="f" style="margin-top:8px">Saldo Fisik</label>
-      <input type="text" inputmode="numeric" id="f-fisik-seluruh-${a.id}" placeholder="0" onfocus="scrollToMe(this)"
-        oninput="this.value=this.value.replace(/[^0-9]/g,''); updateSelisihSeluruh(${a.id}, ${saldoSistem})">
-      <div id="selisih-seluruh-${a.id}" class="hint"></div>
+    const saldoSistem = getSaldoAsOf(a.id, tanggal);
+    return `<div class="row-item">
+      <div class="row-main"><div class="row-title">${esc(a.name)}</div><div class="row-sub">${ACC_LABEL[a.tipe]}</div></div>
+      <div class="row-amt">${fmtRp(saldoSistem)}</div>
     </div>`;
   }).join('');
 
-  const eligible = accs.filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
+  // Cash sengaja dipisah dari daftar akun di atas: angkanya adalah data PEMBANDING
+  // (hasil akumulasi mutasi dari penjualan akun-akun lain), bukan akun independen
+  // yang sejajar dengan yang lain — makanya ditaruh sejajar dengan TOTAL SALDO SISTEM.
+  let cashCardHTML = '';
+  if(cashAcc){
+    const lastClosingCash = getLatestClosing(cashAcc.id);
+    const cashAlreadyClosed = lastClosingCash && tanggal<=lastClosingCash.tanggal;
+    cashCardHTML = cashAlreadyClosed
+      ? `<div class="card-sub" style="flex:1">
+          <div class="lbl">SALDO CASH (PEMBANDING)</div>
+          <div class="val" style="color:var(--muted)">✅ sudah ditutup s/d ${esc(lastClosingCash.tanggal)}</div>
+        </div>`
+      : `<div class="card-sub" style="flex:1">
+          <div class="lbl">SALDO CASH (PEMBANDING)</div>
+          <div class="val">${fmtRp(getSaldoAsOf(cashAcc.id, tanggal))}</div>
+        </div>`;
+  }
 
   const inDay = DB.transactions.filter(t=>t.tanggal===tanggal);
-  let cogsHari=0, opexHari=0, pendapatanHari=0;
+  let belanjaStokHari=0, opexHari=0, pendapatanHari=0;
   inDay.forEach(t=>{
     if(t.is_penjualan && t.payment_status==='paid') pendapatanHari += (t.profit||0);
-    if(t.expense_type){ if(t.expense_type==='COGS') cogsHari+=t.amount; else opexHari+=t.amount; }
+    if(t.expense_type==='OPEX') opexHari += t.amount;
+    if(t.flow==='Mutasi' && t.kategori==='Belanja Stok') belanjaStokHari += t.amount;
   });
 
   return `
@@ -1215,52 +1415,67 @@ function screenTutupKasirSeluruh(){
     <div class="hint">Cuma akun yang belum ditutup sampai tanggal ini yang diproses. Akun yang sudah ditutup otomatis dilewati (ditandai ✅).</div>
 
     <div class="card-sub" style="margin-top:10px">
-      <div class="lbl">MODAL BARANG &amp; BIAYA OPERASIONAL — ${esc(tanggal)}</div>
+      <div class="lbl">BELANJA STOK &amp; BIAYA OPERASIONAL — ${esc(tanggal)}</div>
       <div class="hint" style="margin:4px 0 8px">
-        <b>Modal Barang</b>: uang yang keluar hari itu buat beli stok/barang dagangan (belanja stok) — bukan penjualan, bukan biaya rutin usaha.<br>
-        <b>Biaya Operasional</b>: pengeluaran rutin usaha hari itu (listrik, sewa, dll) yang bukan buat beli barang.<br>
-        Dua angka ini cuma referensi/konteks pas kamu hitung fisik — bukan bagian dari saldo akun manapun, jadi gak mempengaruhi perhitungan selisih di bawah.
+        <b>Belanja Stok</b>: uang yang keluar hari itu buat beli stok/barang dagangan — udah otomatis pindah jadi nilai stok di akun Barang/Voucher Fisik (kelihatan di saldo sistem akun itu di atas), bukan hilang.<br>
+        <b>Biaya Operasional</b>: pengeluaran rutin usaha hari itu (listrik, sewa, dll).<br>
+        Dua angka ini cuma referensi/konteks, bukan bagian dari saldo akun manapun.
       </div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Modal Barang</span><b style="color:var(--danger)">-${fmtRp(cogsHari)}</b></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Belanja Stok</span><b style="color:var(--danger)">-${fmtRp(belanjaStokHari)}</b></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Biaya Operasional</span><b style="color:var(--danger)">-${fmtRp(opexHari)}</b></div>
       <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Pendapatan (profit) hari ini</span><b style="color:var(--success)">${fmtRp(pendapatanHari)}</b></div>
     </div>
 
-    <div class="section-title">Saldo per Akun</div>
+    <div class="section-title">Saldo Sistem per Akun</div>
     ${rows}
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      ${cashCardHTML}
+      <div class="card-sub" style="flex:1">
+        <div class="lbl">TOTAL SALDO SISTEM (${eligible.length} akun)</div>
+        <div class="val">${fmtRp(totalSistem)}</div>
+      </div>
+    </div>
+
+    <label class="f">Saldo Fisik Total (hasil hitung nyata gabungan seluruh akun)</label>
+    <input type="text" id="f-fisik-total-seluruh" inputmode="numeric" placeholder="0" onfocus="scrollToMe(this)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,''); updateSelisihTotalSeluruh(${totalSistem})">
+    <div id="selisih-total-seluruh" class="hint"></div>
 
     <label class="f">Catatan (opsional, berlaku untuk semua akun yang ditutup di sesi ini)</label>
     <textarea id="f-seluruh-catatan" onfocus="scrollToMe(this)"></textarea>
     <div style="height:10px"></div>
     ${eligible.length>0
-      ? `<button class="btn btn-danger" onclick="submitClosingSeluruh('${tanggal}')">Tutup Kasir Seluruh Akun (${eligible.length}) — ${esc(tanggal)}</button>`
+      ? `<button class="btn btn-danger" onclick="submitClosingSeluruh('${tanggal}', ${totalSistem})">Tutup Kasir Seluruh Akun (${eligible.length}) — ${esc(tanggal)}</button>`
       : `<div class="hint" style="text-align:center">Semua akun sudah ditutup untuk tanggal ini.</div>`}
   `;
 }
-function updateSelisihSeluruh(accId, saldoSistem){
-  const el = document.getElementById('f-fisik-seluruh-'+accId);
-  const fisik = Number(el.value||0);
-  const selisih = fisik - saldoSistem;
-  const out = document.getElementById('selisih-seluruh-'+accId);
+function updateSelisihTotalSeluruh(totalSistem){
+  const fisik = Number(document.getElementById('f-fisik-total-seluruh').value||0);
+  const selisih = fisik - totalSistem;
+  const out = document.getElementById('selisih-total-seluruh');
   out.style.color = selisih===0 ? 'var(--success)' : 'var(--danger)';
   out.textContent = 'Selisih: ' + fmtRp(selisih) + (selisih===0? ' (sesuai)' : selisih>0 ? ' (lebih)' : ' (kurang)');
 }
-function submitClosingSeluruh(tanggal){
-  const eligible = activeAccounts().filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
+function submitClosingSeluruh(tanggal, totalSistem){
+  const eligible = activeAccounts().filter(a=>a.tipe!=='cash').filter(a=>{ const lc=getLatestClosing(a.id); return !(lc && tanggal<=lc.tanggal); });
   if(!eligible.length) return toast('Tidak ada akun yang perlu ditutup','error');
   if(tanggal>todayStr()) return toast('Tidak bisa menutup kasir untuk tanggal yang belum terjadi','error');
-  const catatan = document.getElementById('f-seluruh-catatan').value.trim();
-  const fisikMap = {};
-  eligible.forEach(a=>{ fisikMap[a.id] = Number((document.getElementById('f-fisik-seluruh-'+a.id)||{}).value||0); });
+  const catatanInput = document.getElementById('f-seluruh-catatan').value.trim();
+  const fisikTotal = Number(document.getElementById('f-fisik-total-seluruh').value||0);
+  const selisihTotal = fisikTotal - totalSistem;
   if(!confirm('Tutup kasir untuk '+eligible.length+' akun pada tanggal '+tanggal+'? Semua transaksi tanggal itu & sebelumnya pada akun-akun ini akan terkunci permanen.')) return;
-  let selisihCount = 0;
+  const ringkasan = `[Tutup Seluruh] Total sistem: ${fmtRp(totalSistem)} · Total fisik: ${fmtRp(fisikTotal)} · Selisih: ${fmtRp(selisihTotal)}`;
+  const catatanGabungan = catatanInput ? ringkasan+'\n'+catatanInput : ringkasan;
   eligible.forEach(a=>{
-    const res = closeOneAccount(a.id, tanggal, fisikMap[a.id], catatan);
-    if(res.selisih!==0) selisihCount++;
+    const saldoSistemAkun = getSaldoAsOf(a.id, tanggal);
+    // fisik per akun disamakan dengan sistem (gak ada breakdown per akun dari input gabungan) —
+    // selisih yang beneran relevan buat user ada di catatan & toast di bawah, level total.
+    closeOneAccount(a.id, tanggal, saldoSistemAkun, catatanGabungan);
   });
   saveDB();
   seluruhTanggal = null;
-  toast(selisihCount===0 ? eligible.length+' akun ditutup, semua saldo sesuai' : eligible.length+' akun ditutup, '+selisihCount+' ada selisih', selisihCount===0?'ok':'error');
+  toast(selisihTotal===0 ? eligible.length+' akun ditutup, saldo total sesuai' : eligible.length+' akun ditutup, selisih total '+fmtRp(selisihTotal), selisihTotal===0?'ok':'error');
   navigate('dashboard');
 }
 
@@ -1269,41 +1484,80 @@ function submitClosingSeluruh(tanggal){
 function screenLaporan(){
   const today = todayStr();
   const monthPrefix = today.slice(0,7);
+  const monthStart = monthPrefix+'-01';
+  const dayBeforeMonth = addDays(monthStart, -1);
   const inMonth = DB.transactions.filter(t=>t.tanggal.startsWith(monthPrefix));
-  let pendapatan=0, cogs=0, opex=0;
-  inMonth.forEach(t=>{
-    if(t.is_penjualan && t.payment_status==='paid') pendapatan += (t.profit||0);
-    if(t.expense_type){ if(t.expense_type==='COGS') cogs+=t.amount; else opex+=t.amount; }
-  });
-  const netProfit = pendapatan - cogs - opex;
 
-  const perKategori = {};
-  inMonth.filter(t=>t.is_penjualan).forEach(t=>{
-    perKategori[t.kategori] = perKategori[t.kategori] || {amount:0, profit:0};
-    perKategori[t.kategori].amount += t.amount; perKategori[t.kategori].profit += (t.profit||0);
+  // Omset = OMSET (total nilai transaksi), BUKAN profit. Kategori yang
+  // is_penjualan=true di Kelola Kategori itu yang nentuin masuk omset atau nggak.
+  // Field `profit` per transaksi itu catatan margin independen milikmu sendiri —
+  // ditampilkan di bawah sebagai referensi, TAPI gak dipakai buat hitung Laba Rugi.
+  let totalPenjualan=0, profitTercatat=0, opex=0;
+  inMonth.forEach(t=>{
+    if(t.is_penjualan && t.payment_status==='paid'){ totalPenjualan += t.amount; profitTercatat += (t.profit||0); }
+    if(t.expense_type==='OPEX') opex += t.amount;
   });
-  const maxAmt = Math.max(1, ...Object.values(perKategori).map(v=>v.amount));
+
+  // HPP = Persediaan Awal + Pembelian − Persediaan Akhir (rumus akuntansi standar).
+  // Persediaan = total saldo akun bertipe Barang/Voucher Fisik (nilai stok, nambah pas
+  // Belanja Stok, berkurang pas kejual). Pembelian = Belanja Stok (Mutasi) bulan ini.
+  const stockAccs = stockAccounts();
+  const persediaanAwal = stockAccs.reduce((s,a)=>s+getSaldoAsOf(a.id, dayBeforeMonth), 0);
+  const persediaanAkhir = stockAccs.reduce((s,a)=>s+getSaldoAsOf(a.id, today), 0);
+  const pembelian = inMonth.filter(t=>t.flow==='Mutasi' && t.kategori==='Belanja Stok').reduce((s,t)=>s+t.amount, 0)
+    + inMonth.filter(t=>t.expense_type==='COGS').reduce((s,t)=>s+t.amount, 0); // sisa yang ditag manual, bukan lewat Belanja Stok
+  const hpp = persediaanAwal + pembelian - persediaanAkhir;
+
+  const labaKotor = totalPenjualan - hpp;
+  const labaBersih = labaKotor - opex;
+
+  const penjualanPerKategori = {};
+  inMonth.filter(t=>t.is_penjualan && t.payment_status==='paid').forEach(t=>{
+    penjualanPerKategori[t.kategori] = (penjualanPerKategori[t.kategori]||0) + t.amount;
+  });
+  const maxPenjualan = Math.max(1, ...Object.values(penjualanPerKategori), 0);
+
+  const opexPerJenis = {};
+  inMonth.filter(t=>t.expense_type==='OPEX').forEach(t=>{
+    const label = t.jenis || t.kategori;
+    opexPerJenis[label] = (opexPerJenis[label]||0) + t.amount;
+  });
+  const maxOpex = Math.max(1, ...Object.values(opexPerJenis), 0);
+
+  const barRow = (label, amt, max, color) => `
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:calc(12.5px * var(--fs-mult));font-weight:700;">
+        <span>${esc(label)}</span><span>${fmtRp(amt)}</span>
+      </div>
+      <div style="background:#e2e8f0;border-radius:8px;height:8px;margin-top:4px;">
+        <div style="background:${color};height:8px;border-radius:8px;width:${(amt/max*100).toFixed(0)}%"></div>
+      </div>
+    </div>`;
 
   return `
     <div class="section-title">Laba Rugi — ${monthPrefix}</div>
     <div class="card">
-      <div class="row-item"><div class="row-main"><div class="row-title">Pendapatan Riil (profit)</div></div><div class="row-amt" style="color:var(--success)">${fmtRp(pendapatan)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title">Modal Barang</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(cogs)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title">Biaya Operasional</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
-      <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:calc(15px * var(--fs-mult))">Laba Bersih</div></div><div class="row-amt" style="font-size:calc(16px * var(--fs-mult));color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmtRp(netProfit)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Omset</div></div><div class="row-amt" style="color:var(--success)">${fmtRp(totalPenjualan)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title">Beban Operasional</div></div><div class="row-amt" style="color:var(--danger)">-${fmtRp(opex)}</div></div>
+      <div class="row-item"><div class="row-main"><div class="row-title" style="font-size:calc(15px * var(--fs-mult))">Laba Bersih</div></div><div class="row-amt" style="font-size:calc(16px * var(--fs-mult));color:${labaBersih>=0?'var(--success)':'var(--danger)'}">${fmtRp(labaBersih)}</div></div>
+    </div>
+    <div class="card-sub">
+      <div class="lbl" style="font.bold" >PROFIT TERCATAT</div>
+      <div class="val" style="color:var(--success)">${fmtRp(profitTercatat)}</div>
     </div>
 
-    <div class="section-title">Margin per Kategori (bulan ini)</div>
+    <div class="section-title">Penjualan per Kategori</div>
     <div class="card">
-      ${Object.keys(perKategori).length? Object.entries(perKategori).map(([k,v])=>`
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:calc(12.5px * var(--fs-mult));font-weight:700;">
-            <span>${esc(k)}</span><span>${fmtRp(v.amount)} <span style="color:var(--muted);font-weight:500;">(profit ${fmtRp(v.profit)})</span></span>
-          </div>
-          <div style="background:#e2e8f0;border-radius:8px;height:8px;margin-top:4px;">
-            <div style="background:var(--primary);height:8px;border-radius:8px;width:${(v.amount/maxAmt*100).toFixed(0)}%"></div>
-          </div>
-        </div>`).join('') : '<div class="empty-state">Belum ada data.</div>'}
+      ${Object.keys(penjualanPerKategori).length
+        ? Object.entries(penjualanPerKategori).sort((a,b)=>b[1]-a[1]).map(([k,v])=>barRow(k,v,maxPenjualan,'var(--success)')).join('')
+        : '<div class="empty-state">Belum ada penjualan bulan ini.</div>'}
+    </div>
+
+    <div class="section-title">Rincian Beban Operasional</div>
+    <div class="card">
+      ${Object.keys(opexPerJenis).length
+        ? Object.entries(opexPerJenis).sort((a,b)=>b[1]-a[1]).map(([k,v])=>barRow(k,v,maxOpex,'var(--danger)')).join('')
+        : '<div class="empty-state">Belum ada biaya operasional bulan ini.</div>'}
     </div>
   `;
 }
