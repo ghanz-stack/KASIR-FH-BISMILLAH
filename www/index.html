@@ -2060,6 +2060,14 @@ function screenImportExport(){
       <div style="height:8px"></div>
       <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
     </div>
+    <div class="section-title">Restore Data (JSON)</div>
+    <div class="card">
+      <div class="hint" style="color:var(--danger)">⚠ Restore akan MENIMPA semua data yang ada sekarang (akun, transaksi, kasir, dll) dengan isi file backup. Tidak bisa dibatalkan setelah dikonfirmasi.</div>
+      <div style="height:10px"></div>
+      <input type="file" id="restore-file" accept=".json,application/json">
+      <div style="height:8px"></div>
+      <button class="btn btn-danger" onclick="restoreJson()">Restore dari Backup JSON</button>
+    </div>
     <div class="section-title">Import Transaksi dari CSV</div>
     <div class="card">
       <div class="hint">Kolom wajib: tanggal(YYYY-MM-DD), akun, kategori, jenis, nominal, profit, catatan, status_bayar(lunas/kasbon), nama_pelanggan</div>
@@ -2098,6 +2106,24 @@ function exportAkunCsv(){
 function backupJson(){
   downloadFile('backup_kasir_'+todayStr()+'.json', JSON.stringify(DB, null, 2), 'application/json');
   toast('Backup JSON diunduh','ok');
+}
+function restoreJson(){
+  const file = document.getElementById('restore-file').files[0];
+  if(!file) return toast('Pilih file backup JSON dulu','error');
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    let data;
+    try{ data = JSON.parse(e.target.result); }
+    catch(err){ return toast('File bukan JSON valid: '+err.message,'error'); }
+    if(!Array.isArray(data.accounts) || !Array.isArray(data.transactions) || !Array.isArray(data.categories) || !Array.isArray(data.kasir))
+      return toast('File ini bukan backup Kasir Front House yang valid','error');
+    if(!confirm('Semua data saat ini akan DITIMPA dengan isi file backup ini. Yakin lanjut?')) return;
+    DB = data;
+    saveDB();
+    toast('Restore berhasil, data dipulihkan','ok');
+    navigate('dashboard');
+  };
+  reader.readAsText(file);
 }
 function downloadTemplateCsv(){
   const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
