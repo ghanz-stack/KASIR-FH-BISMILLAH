@@ -287,16 +287,7 @@ function seedIfEmpty(){
   DB.kasir.push({id:uid('kasir'), nama:'Admin', pin_hash:null, pin_salt:null, aktif:1});
 }
 
-function loadDB(){
-  const raw = localStorage.getItem(STORE_KEY);
-  if(raw){ try{ DB = JSON.parse(raw); }catch(e){ DB = null; } }
-  if(!DB){
-    DB = {accounts:[], categories:[], transactions:[], kasbon:[], kasir:[], closings:[],
-      nextId:{accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1}, currentKasirId:null,
-      migratedFlowV2:true};
-    seedIfEmpty();
-    saveDB();
-  }
+function normalizeDB(){
   if(!DB.closings) DB.closings=[];
   if(!DB.nextId.closings) DB.nextId.closings=1;
   DB.categories.forEach(c=>{ if(c.aktif===undefined) c.aktif=1; });
@@ -311,6 +302,18 @@ function loadDB(){
   if(migrateTopupRename()) saveDB();
   if(migrateExpenseTypeFix()) saveDB();
   if(migrateStockMutasiExpenseTypeFix()) saveDB();
+}
+function loadDB(){
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw){ try{ DB = JSON.parse(raw); }catch(e){ DB = null; } }
+  if(!DB){
+    DB = {accounts:[], categories:[], transactions:[], kasbon:[], kasir:[], closings:[],
+      nextId:{accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1}, currentKasirId:null,
+      migratedFlowV2:true};
+    seedIfEmpty();
+    saveDB();
+  }
+  normalizeDB();
 }
 function saveDB(){ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
 
@@ -1904,6 +1907,14 @@ function screenImportExport(){
       <div style="height:8px"></div>
       <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
     </div>
+    <div class="section-title">Restore dari Backup JSON</div>
+    <div class="card">
+      <div class="hint" style="color:var(--danger)">⚠ Restore akan MENIMPA seluruh data yang ada sekarang (transaksi, akun, kategori, closing) dengan isi file backup. Pastikan file-nya benar sebelum lanjut.</div>
+      <div style="height:10px"></div>
+      <input type="file" id="restore-file" accept="application/json,.json">
+      <div style="height:8px"></div>
+      <button class="btn btn-danger" onclick="restoreJson()">Restore dari File Backup</button>
+    </div>
     <div class="section-title">Import Transaksi dari CSV</div>
     <div class="card">
       <div class="hint">Kolom wajib: tanggal(YYYY-MM-DD), akun, kategori, jenis, nominal, profit, catatan, status_bayar(lunas/kasbon), nama_pelanggan</div>
@@ -1942,6 +1953,29 @@ function exportAkunCsv(){
 function backupJson(){
   downloadFile('backup_kasir_'+todayStr()+'.json', JSON.stringify(DB, null, 2), 'application/json');
   toast('Backup JSON diunduh','ok');
+}
+function restoreJson(){
+  const inp = document.getElementById('restore-file');
+  const file = inp && inp.files[0];
+  if(!file) return toast('Pilih file backup JSON dulu','error');
+  if(!confirm('Restore akan MENIMPA semua data yang ada sekarang dengan isi file backup ini dan tidak bisa dibatalkan. Yakin lanjut?')) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try{ parsed = JSON.parse(reader.result); }
+    catch(e){ return toast('File bukan JSON valid','error'); }
+    if(!parsed || !Array.isArray(parsed.accounts) || !Array.isArray(parsed.categories) ||
+       !Array.isArray(parsed.transactions) || !parsed.nextId){
+      return toast('File ini bukan backup Kasir Front House yang valid','error');
+    }
+    DB = parsed;
+    normalizeDB();
+    saveDB();
+    toast('Restore berhasil, memuat ulang...','ok');
+    setTimeout(()=>location.reload(), 600);
+  };
+  reader.onerror = () => toast('Gagal membaca file','error');
+  reader.readAsText(file);
 }
 function downloadTemplateCsv(){
   const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
