@@ -214,7 +214,29 @@ textarea{resize:vertical; min-height:56px;}
 .empty-state{text-align:center; padding:40px 10px; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center;}
 .empty-state .ic{font-size:calc(38px * var(--fs-mult)); margin-bottom:12px; opacity:0.8;}
 
-.ripple{position:relative; overflow:hidden;}
+  .ripple{position:relative; overflow:hidden;}
+
+/* ===== Profit Rainbow Glow ===== */
+.profit-glow-wrap{
+  position:relative;
+  border-radius:16px;
+  padding:3px;
+  background: linear-gradient(90deg, #f59e0b, #ec4899, #6366f1, #10b981, #06b6d4, #f59e0b);
+  background-size: 300% 300%;
+  animation: rainbowShift 3s linear infinite;
+  box-shadow: 0 0 12px 2px rgba(236,72,153,0.35), 0 0 24px 4px rgba(99,102,241,0.2);
+}
+.profit-glow-wrap input{
+  border: none !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  width: 100%;
+}
+@keyframes rainbowShift{
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
 /* SVG Icon System classes */
 .svg-ic {
@@ -242,38 +264,89 @@ textarea{resize:vertical; min-height:56px;}
   height: 16px;
   stroke-width: 2;
 }
-/* Icon container animators */
+/* ===== Icon container animators ===== */
 .ic-spin .svg-ic {
   animation: spin 8s infinite linear;
 }
-.navbtn:hover .svg-ic, .shortcut:hover .svg-ic {
-  transform: scale(1.18);
+
+/* Idle breathe on ALL icons */
+.svg-ic {
+  animation: iconBreathe 2.8s ease-in-out infinite;
 }
-.shortcut:hover .ic-bounce .svg-ic {
-  animation: bounce 0.6s ease infinite alternate;
-}
-.shortcut:hover .ic-spin .svg-ic {
-  animation: spin 2s infinite linear;
-}
+/* Stop breathe saat ada animasi khusus */
+.ic-spin .svg-ic,
+.shortcut:hover .ic-bounce .svg-ic,
+.shortcut:hover .ic-spin .svg-ic,
 .shortcut:hover .ic-shake .svg-ic {
-  animation: shake 0.4s ease infinite;
+  animation-name: spin, iconBreathe;
 }
-.shortcut:hover .ic-rotate180 .svg-ic {
-  transform: rotate(180deg);
+.shortcut:hover .ic-bounce .svg-ic { animation: bounce 0.6s ease infinite alternate; }
+.shortcut:hover .ic-spin   .svg-ic { animation: spin 2s infinite linear; }
+.shortcut:hover .ic-shake  .svg-ic { animation: shake 0.4s ease infinite; }
+.shortcut:hover .ic-rotate180 .svg-ic { transform: rotate(180deg); animation: none; }
+
+/* Scale hover semua navbtn & shortcut */
+.navbtn:hover .svg-ic, .shortcut:hover .svg-ic {
+  animation: iconHoverPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
 
+/* Tap/klik → bounce pop */
+.navbtn:active .svg-ic,
+.shortcut:active .svg-ic,
+.back-btn:active .svg-ic,
+.lock-btn:active .svg-ic,
+.btn:active .svg-ic,
+.btn-outline:active .svg-ic,
+.btn-danger:active .svg-ic,
+.row-item:active .svg-ic,
+.setting-item:active .svg-ic {
+  animation: iconTap 0.25s cubic-bezier(0.36,0.07,0.19,0.97) both;
+}
+
+/* Navbtn active: icon glow warna primer */
+.navbtn.active .svg-ic {
+  filter: drop-shadow(0 0 5px var(--primary-light));
+  animation: iconActiveGlow 1.8s ease-in-out infinite alternate;
+}
+
+/* Pop-in saat icon pertama kali render */
+.shortcut .svg-ic { animation: iconPopIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both, iconBreathe 2.8s ease-in-out 0.45s infinite; }
+
+@keyframes iconBreathe {
+  0%,100% { transform: scale(1)    translateY(0);    opacity:0.92; }
+  50%      { transform: scale(1.07) translateY(-2px); opacity:1;    }
+}
+@keyframes iconHoverPop {
+  0%   { transform: scale(1); }
+  60%  { transform: scale(1.28); }
+  100% { transform: scale(1.18); }
+}
+@keyframes iconTap {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.78); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes iconActiveGlow {
+  from { filter: drop-shadow(0 0 4px var(--primary-light)); }
+  to   { filter: drop-shadow(0 0 10px var(--primary)); }
+}
+@keyframes iconPopIn {
+  from { transform: scale(0); opacity:0; }
+  to   { transform: scale(1); opacity:1; }
+}
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 @keyframes bounce {
-  0% { transform: translateY(0); }
+  0%   { transform: translateY(0); }
   100% { transform: translateY(-4px); }
 }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
+  25%       { transform: translateX(-3px); }
+  75%       { transform: translateX(3px); }
 }
 </style>
 <link rel="manifest" href="manifest.json">
@@ -903,9 +976,11 @@ function screenInput(fresh){
     ${renderKeypad()}
 
     <div id="profit-wrap" style="${cat && cat.is_penjualan?'':'display:none'}">
-      <label class="f">Profit / Margin (opsional)</label>
-      <input type="text" inputmode="numeric" id="f-profit" placeholder="0" value="${editingTx && editingTx.profit ? editingTx.profit : ''}" onfocus="scrollToMe(this)"
-        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      <label class="f" style="font-weight:800;">Profit / Keuntungan</label>
+      <div class="profit-glow-wrap">
+        <input type="text" inputmode="numeric" id="f-profit" placeholder="0" value="${editingTx && editingTx.profit ? editingTx.profit : ''}" onfocus="scrollToMe(this)"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
     </div>
 
     <div id="expense-type-wrap" style="${cat && cat.flow==='Pengeluaran' && !cat.is_penjualan && cat.name!=='Belanja Stok'?'':'display:none'}">
@@ -2060,13 +2135,12 @@ function screenImportExport(){
       <div style="height:8px"></div>
       <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
     </div>
-    <div class="section-title">Restore Data (JSON)</div>
+    <div class="section-title">Restore / Pulihkan Data (JSON)</div>
     <div class="card">
-      <div class="hint" style="color:var(--danger)">⚠ Restore akan MENIMPA semua data yang ada sekarang (akun, transaksi, kasir, dll) dengan isi file backup. Tidak bisa dibatalkan setelah dikonfirmasi.</div>
-      <div style="height:10px"></div>
+      <div class="hint" style="margin-bottom:10px">Pilih file backup (.json) yang sebelumnya diunduh dari aplikasi ini. <b>Semua data saat ini akan ditimpa!</b></div>
       <input type="file" id="restore-file" accept=".json,application/json">
-      <div style="height:8px"></div>
-      <button class="btn btn-danger" onclick="restoreJson()">Restore dari Backup JSON</button>
+      <div style="height:10px"></div>
+      <button class="btn btn-danger" onclick="restoreJson()">Restore dari File JSON</button>
     </div>
     <div class="section-title">Import Transaksi dari CSV</div>
     <div class="card">
@@ -2108,22 +2182,42 @@ function backupJson(){
   toast('Backup JSON diunduh','ok');
 }
 function restoreJson(){
-  const file = document.getElementById('restore-file').files[0];
+  const inp = document.getElementById('restore-file');
+  const file = inp && inp.files[0];
   if(!file) return toast('Pilih file backup JSON dulu','error');
+  if(!confirm('Restore akan MENIMPA semua data yang ada sekarang dengan isi file backup ini dan tidak bisa dibatalkan. Yakin lanjut?')) return;
   const reader = new FileReader();
-  reader.onload = (e)=>{
-    let data;
-    try{ data = JSON.parse(e.target.result); }
-    catch(err){ return toast('File bukan JSON valid: '+err.message,'error'); }
-    if(!Array.isArray(data.accounts) || !Array.isArray(data.transactions) || !Array.isArray(data.categories) || !Array.isArray(data.kasir))
+  reader.onload = () => {
+    let parsed;
+    try{ parsed = JSON.parse(reader.result); }
+    catch(e){ return toast('File bukan JSON valid','error'); }
+    if(!parsed || !Array.isArray(parsed.accounts) || !Array.isArray(parsed.categories) ||
+       !Array.isArray(parsed.transactions) || !parsed.nextId){
       return toast('File ini bukan backup Kasir Front House yang valid','error');
-    if(!confirm('Semua data saat ini akan DITIMPA dengan isi file backup ini. Yakin lanjut?')) return;
-    DB = data;
+    }
+    DB = parsed;
+    normalizeDB();
     saveDB();
-    toast('Restore berhasil, data dipulihkan','ok');
-    navigate('dashboard');
+    toast('Restore berhasil, memuat ulang.','ok');
+    setTimeout(()=>{ DB.currentKasirId=null; render(); }, 1000);
   };
   reader.readAsText(file);
+}
+function normalizeDB(){
+  if(!DB.closings) DB.closings = [];
+  if(!DB.kasbon) DB.kasbon = [];
+  if(!DB.categories) DB.categories = [];
+  if(!DB.accounts) DB.accounts = [];
+  if(!DB.transactions) DB.transactions = [];
+  if(!DB.kasir) DB.kasir = [];
+  if(!DB.nextId) DB.nextId = {accounts:1,categories:1,transactions:1,kasbon:1,kasir:1,closings:1};
+  if(!DB.nextId.closings) DB.nextId.closings = 1;
+  if(!DB.settings) DB.settings = {fontScale:'regular'};
+  if(!DB.settings.fontScale) DB.settings.fontScale = 'regular';
+  DB.categories.forEach(c=>{ if(c.aktif===undefined) c.aktif=1; });
+  if(migrateTopupRename()) {}
+  if(migrateExpenseTypeFix()) {}
+  if(migrateStockMutasiExpenseTypeFix()) {}
 }
 function downloadTemplateCsv(){
   const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
