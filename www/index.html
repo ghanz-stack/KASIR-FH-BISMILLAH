@@ -5,66 +5,94 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Kasir Front House</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 :root{
-  --primary:#0F766E; --primary-dark:#0b5c56; --primary-light:#14b8a6;
-  --ewallet:#10b981; --bank:#3b82f6; --cash:#f59e0b; --voucher:#8b5cf6;
-  --barang:#64748b; --ppob:#06b6d4; --mutasi:#6366f1;
+  --primary:#4f46e5; --primary-dark:#3730a3; --primary-light:#818cf8;
+  --ewallet:#ec4899; --bank:#3b82f6; --cash:#10b981; --voucher:#8b5cf6;
+  --barang:#f59e0b; --ppob:#06b6d4; --mutasi:#6366f1;
   --danger:#ef4444; --warning:#f59e0b; --success:#10b981;
-  --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+  --bg:#f3f4f6; --card:#ffffff; --text:#1e1b4b; --muted:#6366f1; --border:#e0e7ff;
   --fs-mult:1;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+html,body{margin:0;padding:0;height:100%;
+  background:var(--bg);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%);
+  color:var(--text);
+  font-family:'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overscroll-behavior:contain; overflow:hidden;}
 #app-root{position:fixed; inset:0; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top);
   padding-bottom:env(safe-area-inset-bottom);}
 #screen{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px 90px 14px;}
-#screen.slide{animation:slideIn .22s ease-out;}
-@keyframes slideIn{from{opacity:0; transform:translateX(16px);} to{opacity:1; transform:translateX(0);}}
+#screen.slide{animation:slideIn .35s cubic-bezier(0.16, 1, 0.3, 1);}
+@keyframes slideIn{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);}}
 
 /* Top bar */
-.topbar{display:flex; align-items:center; gap:10px; padding:12px 14px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
-  color:#fff; box-shadow:0 2px 8px rgba(15,118,110,.25); position:relative; z-index:5;}
-.topbar h1{font-size:calc(16px * var(--fs-mult)); margin:0; font-weight:700; flex:1;}
+.topbar{display:flex; align-items:center; gap:12px; padding:14px 16px; 
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff; box-shadow:0 4px 12px rgba(15,118,110,.25); position:relative; z-index:5;
+  border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+.topbar h1{font-size:calc(16.5px * var(--fs-mult)); margin:0; font-weight:700; flex:1; display:flex; align-items:center; gap:6px;}
 .back-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:34px; height:34px; border-radius:10px;
-  font-size:calc(18px * var(--fs-mult)); display:flex; align-items:center; justify-content:center;}
-.kasir-chip{font-size:calc(11px * var(--fs-mult)); background:rgba(255,255,255,.18); padding:5px 10px; border-radius:20px; white-space:nowrap;}
-.lock-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:10px; font-size:calc(15px * var(--fs-mult));}
+  font-size:calc(18px * var(--fs-mult)); display:flex; align-items:center; justify-content:center;
+  transition:transform 0.2s ease, background 0.2s ease; cursor:pointer;}
+.back-btn:active{transform:scale(.92); background:rgba(255,255,255,.28);}
+.kasir-chip{font-size:calc(11.5px * var(--fs-mult)); background:rgba(255,255,255,.18); padding:5px 12px; border-radius:20px; white-space:nowrap; font-weight:600; display:flex; align-items:center; gap:4px;}
+.lock-btn{background:rgba(255,255,255,.18); border:none; color:#fff; width:34px; height:34px; border-radius:10px; font-size:calc(15px * var(--fs-mult)); display:flex; align-items:center; justify-content:center; transition:transform 0.2s ease, background 0.2s ease; cursor:pointer;}
+.lock-btn:active{transform:scale(.9); background:rgba(255,255,255,.28);}
 
 /* Bottom nav */
-.bottomnav{position:fixed; left:0; right:0; bottom:0; display:flex; background:var(--card);
-  box-shadow:0 -2px 12px rgba(0,0,0,.08); padding-bottom:env(safe-area-inset-bottom); z-index:10;}
-.navbtn{flex:1; border:none; background:none; padding:9px 2px 8px; display:flex; flex-direction:column;
-  align-items:center; gap:2px; color:var(--muted); font-size:calc(10.5px * var(--fs-mult)); font-weight:600;}
+.bottomnav{position:fixed; left:0; right:0; bottom:0; display:flex; 
+  background:rgba(255, 255, 255, 0.85); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 -4px 16px rgba(0,0,0,.05); border-top:1px solid rgba(0,0,0,.04); padding-bottom:env(safe-area-inset-bottom); z-index:10;}
+.navbtn{flex:1; border:none; background:none; padding:10px 2px 8px; display:flex; flex-direction:column;
+  align-items:center; gap:4px; color:var(--muted); font-size:calc(10.5px * var(--fs-mult)); font-weight:600;
+  transition:color 0.2s ease, transform 0.2s ease; cursor:pointer;}
+.navbtn:active{transform:scale(.92);}
 .navbtn.active{color:var(--primary);}
-.navbtn .ic{font-size:calc(19px * var(--fs-mult));}
+.navbtn .ic{font-size:calc(19px * var(--fs-mult)); transition:transform 0.2s ease;}
+.navbtn.active .ic{transform:scale(1.15);}
 
 /* Cards */
-.card{background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
-.card-hero{background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; border-radius:18px;
-  padding:18px; margin-bottom:12px; box-shadow:0 6px 16px rgba(15,118,110,.25);}
-.card-hero .lbl{font-size:calc(12px * var(--fs-mult)); opacity:.85; font-weight:600;}
-.card-hero .val{font-size:calc(28px * var(--fs-mult)); font-weight:800; margin-top:4px;}
-.card-sub{background:var(--card); border-radius:14px; padding:12px 14px; margin-bottom:12px; border:1px solid var(--border);}
-.card-sub .lbl{font-size:calc(11px * var(--fs-mult)); color:var(--muted); font-weight:600;}
-.card-sub .val{font-size:calc(18px * var(--fs-mult)); font-weight:700; margin-top:2px;}
+.card{background:var(--card); border-radius:18px; padding:18px; margin-bottom:14px; 
+  box-shadow:0 8px 24px rgba(148, 163, 184, 0.08), 0 1px 3px rgba(0,0,0,.02);
+  transition:transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;}
+.card:hover{transform:translateY(-2px); box-shadow:0 12px 30px rgba(148, 163, 184, 0.12);}
+.card-hero{background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; border-radius:20px;
+  padding:20px; margin-bottom:14px; box-shadow:0 8px 20px rgba(15,118,110,.25); position:relative; overflow:hidden;}
+.card-hero::before {
+  content: ''; position: absolute; top: -50%; right: -20%; width: 140px; height: 140px;
+  background: rgba(255,255,255,0.08); border-radius: 50%; filter: blur(10px);
+}
+.card-hero .lbl{font-size:calc(12px * var(--fs-mult)); opacity:.85; font-weight:600; letter-spacing:0.02em;}
+.card-hero .val{font-size:calc(28px * var(--fs-mult)); font-weight:800; margin-top:6px; letter-spacing:-0.02em;}
+.card-sub{background:var(--card); border-radius:16px; padding:14px 16px; margin-bottom:14px; border:1px solid var(--border);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02);}
+.card-sub .lbl{font-size:calc(11px * var(--fs-mult)); color:var(--muted); font-weight:600; letter-spacing:0.02em;}
+.card-sub .val{font-size:calc(19px * var(--fs-mult)); font-weight:700; margin-top:4px;}
 
-.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
 
-.section-title{font-size:calc(13px * var(--fs-mult)); font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;
-  margin:14px 0 8px 2px;}
+.section-title{font-size:calc(12.5px * var(--fs-mult)); font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;
+  margin:16px 0 10px 2px; display:flex; align-items:center; gap:6px;}
 
-.acc-card{border-radius:14px; padding:12px; color:#fff; position:relative; overflow:hidden; margin-bottom:8px;
-  box-shadow:0 3px 8px rgba(0,0,0,.12);}
-.acc-card .name{font-size:calc(13px * var(--fs-mult)); font-weight:700;}
-.acc-card .tipe{font-size:calc(10px * var(--fs-mult)); opacity:.85;}
-.acc-card .saldo{font-size:calc(17px * var(--fs-mult)); font-weight:800; margin-top:6px;}
-.acc-card.low::after{content:"⚠ di bawah ambang"; position:absolute; top:8px; right:10px; font-size:calc(9px * var(--fs-mult));
-  background:rgba(0,0,0,.25); padding:2px 6px; border-radius:8px;}
+.acc-card{border-radius:16px; padding:14px; color:#fff; position:relative; overflow:hidden; margin-bottom:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08); transition:transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;}
+.acc-card::after{content:''; position:absolute; top:-30%; right:-15%; width:100px; height:100px; background:rgba(255,255,255,0.08); border-radius:50%;}
+.acc-card:hover{transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.12);}
+.acc-card:active{transform:scale(.97);}
+.acc-card .name{font-size:calc(13.5px * var(--fs-mult)); font-weight:700;}
+.acc-card .tipe{font-size:calc(10.5px * var(--fs-mult)); opacity:.85; font-weight:500;}
+.acc-card .saldo{font-size:calc(18.5px * var(--fs-mult)); font-weight:800; margin-top:8px; letter-spacing:-0.01em;}
+.acc-card.low::after{content:"⚠️ di bawah ambang"; position:absolute; top:8px; right:10px; font-size:calc(9px * var(--fs-mult));
+  background:rgba(239,68,68,.3); border:1px solid rgba(239,68,68,.4); padding:3px 8px; border-radius:8px; color:#fff; font-weight:700;}
 
-.badge{display:inline-block; padding:3px 9px; border-radius:20px; font-size:calc(10.5px * var(--fs-mult)); font-weight:700;}
+.badge{display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:calc(10.5px * var(--fs-mult)); font-weight:700;}
 .badge-in{background:#d1fae5; color:#065f46;}
 .badge-out{background:#fee2e2; color:#991b1b;}
 .badge-netral{background:#e2e8f0; color:#334155;}
@@ -72,100 +100,186 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
 .badge-unpaid{background:#fef3c7; color:#92400e;}
 .badge-locked{background:#e2e8f0; color:#475569;}
 
-.alert-strip{display:flex; gap:8px; overflow-x:auto; margin-bottom:6px; padding-bottom:4px;}
+.alert-strip{display:flex; gap:10px; overflow-x:auto; margin-bottom:8px; padding-bottom:6px; scrollbar-width: none;}
+.alert-strip::-webkit-scrollbar {display:none;}
 .alert-chip{flex:0 0 auto; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:calc(11.5px * var(--fs-mult));
-  font-weight:600; padding:8px 12px; border-radius:12px; white-space:nowrap;}
+  font-weight:600; padding:8px 14px; border-radius:14px; white-space:nowrap; animation: pulse 2s infinite alternate;}
 .alert-chip.danger{background:#fef2f2; border-color:#fecaca; color:#991b1b;}
+@keyframes pulse { from {opacity: 0.9; transform: scale(1);} to {opacity: 1; transform: scale(1.02);} }
 
-.shortcuts{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:6px;}
-.shortcut{display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 2px; border-radius:14px;
-  color:#fff; font-size:calc(10px * var(--fs-mult)); font-weight:700; text-align:center;}
-.shortcut .ic{font-size:calc(20px * var(--fs-mult));}
+.shortcuts{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:10px;}
+.shortcut{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:12px 2px; border-radius:18px;
+  color:#fff; font-size:calc(10.5px * var(--fs-mult)); font-weight:700; text-align:center; border:none; cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,.08); transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;}
+.shortcut:hover{transform:translateY(-4px); box-shadow:0 8px 16px rgba(0,0,0,0.12);}
+.shortcut:active{transform:translateY(0) scale(.93);}
+.shortcut .ic{font-size:calc(20px * var(--fs-mult)); transition:transform 0.25s ease;}
+.shortcut:hover .ic{transform:scale(1.15);}
 
 /* Buttons */
-.btn{display:block; width:100%; padding:13px; border:none; border-radius:12px; font-size:calc(15px * var(--fs-mult)); font-weight:700;
-  color:#fff; background:var(--primary); position:relative; overflow:hidden;}
-.btn:active{transform:scale(.98);}
-.btn-outline{background:#fff; color:var(--primary); border:1.5px solid var(--primary);}
-.btn-danger{background:var(--danger);}
-.btn-sm{padding:8px 12px; font-size:calc(12.5px * var(--fs-mult)); border-radius:9px; width:auto; display:inline-block;}
-.btn-row{display:flex; gap:8px;}
+.btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; border:none; border-radius:14px; font-size:calc(15px * var(--fs-mult)); font-weight:700;
+  color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); box-shadow:0 4px 12px rgba(15,118,110,.25);
+  transition:all .2s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer;}
+.btn:active{transform:scale(.97); box-shadow:0 2px 4px rgba(15,118,110,.1);}
+.btn-outline{background:#fff; color:var(--primary); border:1.5px solid var(--primary); box-shadow:none;}
+.btn-outline:active{background:var(--bg);}
+.btn-danger{background:linear-gradient(135deg,var(--danger),#b91c1c); box-shadow:0 4px 12px rgba(239,68,68,.25);}
+.btn-danger:active{box-shadow:0 2px 4px rgba(239,68,68,.1);}
+.btn-sm{padding:8px 14px; font-size:calc(12px * var(--fs-mult)); border-radius:10px; width:auto; display:inline-flex;}
+.btn-row{display:flex; gap:10px;}
 .btn-row .btn{flex:1;}
 
 /* Forms */
-label.f{display:block; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted); margin:12px 0 6px;}
+label.f{display:block; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted); margin:14px 0 6px 2px;}
 input[type=text],input[type=date],input[type=number],select,textarea{
-  width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:11px; font-size:calc(14.5px * var(--fs-mult));
-  background:#fff; color:var(--text);}
+  width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:14px; font-size:calc(14.5px * var(--fs-mult));
+  background:#fff; color:var(--text); transition:border-color 0.2s ease, box-shadow 0.2s ease;}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(20,184,166,.12);
+}
 textarea{resize:vertical; min-height:56px;}
-.seg{display:flex; flex-wrap:wrap; gap:7px;}
-.seg-btn{padding:9px 13px; border-radius:11px; border:1.5px solid var(--border); background:#fff; font-size:calc(13px * var(--fs-mult));
-  font-weight:600; color:var(--text);}
-.seg-btn.sel{color:#fff; border-color:transparent; background:var(--primary);}
-.hint{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:4px;}
+.seg{display:flex; flex-wrap:wrap; gap:8px;}
+.seg-btn{padding:10px 14px; border-radius:12px; border:1.5px solid var(--border); background:#fff; font-size:calc(13px * var(--fs-mult));
+  font-weight:600; color:var(--text); transition:all 0.2s ease; cursor:pointer;}
+.seg-btn:active{transform:scale(0.96);}
+.seg-btn.sel{color:#fff; border-color:transparent; background:var(--primary); box-shadow:0 4px 8px rgba(15,118,110,.25);}
+.hint{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:6px; line-height:1.4;}
 
 /* Keypad */
-.amount-display{background:#0f172a; color:#fff; border-radius:14px; padding:16px; text-align:right; font-size:calc(26px * var(--fs-mult));
-  font-weight:800; margin-bottom:10px; letter-spacing:.02em;}
-.keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
-.key{padding:15px 0; text-align:center; font-size:calc(19px * var(--fs-mult)); font-weight:700; background:#fff; border:1px solid var(--border);
-  border-radius:12px;}
-.key:active{background:#f1f5f9;}
-.key.fn{background:#fef2f2; color:var(--danger); font-size:calc(15px * var(--fs-mult));}
+.amount-display{background:#0f172a; color:#fff; border-radius:16px; padding:18px; text-align:right; font-size:calc(26px * var(--fs-mult));
+  font-weight:800; margin-bottom:12px; letter-spacing:.02em; box-shadow:inset 0 2px 8px rgba(0,0,0,0.5);}
+.keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;}
+.key{padding:16px 0; text-align:center; font-size:calc(20px * var(--fs-mult)); font-weight:700; background:#fff; border:1px solid var(--border);
+  border-radius:14px; transition:all 0.15s ease; box-shadow:0 1px 3px rgba(0,0,0,.02); cursor:pointer;}
+.key:active{background:#f1f5f9; transform:scale(0.95); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);}
+.key.fn{background:#fef2f2; color:var(--danger); font-size:calc(15.5px * var(--fs-mult));}
+.key.fn:active{background:#fee2e2;}
 
 /* Rows */
-.row-item{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border);}
+.row-item{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border);
+  transition:all 0.2s ease; cursor:pointer;}
+.row-item:hover{background-color:rgba(241, 245, 249, 0.4); transform:translateX(2px);}
 .row-item:last-child{border-bottom:none;}
 .row-dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
 .row-main{flex:1; min-width:0;}
-.row-title{font-size:calc(13.5px * var(--fs-mult)); font-weight:700;}
-.row-sub{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:1px;}
+.row-title{font-size:calc(13.5px * var(--fs-mult)); font-weight:700; display:flex; align-items:center; gap:6px;}
+.row-sub{font-size:calc(11.5px * var(--fs-mult)); color:var(--muted); margin-top:2px;}
 .row-amt{font-size:calc(14px * var(--fs-mult)); font-weight:800; white-space:nowrap;}
 
-.tabs{display:flex; gap:6px; margin-bottom:12px; background:#e2e8f0; padding:4px; border-radius:12px;}
-.tab{flex:1; text-align:center; padding:8px 4px; border-radius:9px; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted);}
-.tab.sel{background:#fff; color:var(--primary);}
+.tabs{display:flex; gap:6px; margin-bottom:14px; background:#e2e8f0; padding:4px; border-radius:14px;}
+.tab{flex:1; text-align:center; padding:9px 4px; border-radius:10px; font-size:calc(12px * var(--fs-mult)); font-weight:700; color:var(--muted); transition:all 0.2s ease; cursor:pointer;}
+.tab.sel{background:#fff; color:var(--primary); box-shadow:0 2px 6px rgba(0,0,0,.05);}
 
-.settings-list a.setting-item{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--border);
-  text-decoration:none; color:var(--text); font-size:calc(14px * var(--fs-mult)); font-weight:600; cursor:pointer;}
-.settings-list .ic{font-size:calc(19px * var(--fs-mult)); width:26px; text-align:center;}
+.settings-list a.setting-item{display:flex; align-items:center; gap:14px; padding:14px 4px; border-bottom:1px solid var(--border);
+  text-decoration:none; color:var(--text); font-size:calc(14.5px * var(--fs-mult)); font-weight:600; cursor:pointer;
+  transition:all 0.2s ease;}
+.settings-list a.setting-item:hover{background-color:rgba(241, 245, 249, 0.4); transform:translateX(4px);}
+.settings-list .ic{font-size:calc(19px * var(--fs-mult)); width:26px; text-align:center; display:flex; align-items:center; justify-content:center;}
 
 /* Toast */
 #toast{position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(20px); background:#0f172a; color:#fff;
-  padding:11px 18px; border-radius:12px; font-size:calc(13px * var(--fs-mult)); font-weight:600; opacity:0; pointer-events:none; z-index:100;
-  transition:all .25s ease; max-width:88%; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  padding:12px 20px; border-radius:16px; font-size:calc(13px * var(--fs-mult)); font-weight:600; opacity:0; pointer-events:none; z-index:100;
+  transition:all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-width:88%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.25);
+  display:flex; align-items:center; justify-content:center; gap:8px;}
 #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
 /* Lock screen */
-#lockscreen{position:fixed; inset:0; background:linear-gradient(160deg,var(--primary-dark),var(--primary)); z-index:200;
-  display:flex; flex-direction:column; color:#fff; padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom);}
+#lockscreen{position:fixed; inset:0; background:radial-gradient(circle at top, var(--primary), var(--primary-dark)); z-index:200;
+  display:flex; flex-direction:column; color:#fff; padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+  animation: fadeIn 0.4s ease-out;}
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 .lock-inner{flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px 0;}
-.lock-logo{font-size:calc(44px * var(--fs-mult)); margin-bottom:6px;}
-.lock-title{font-size:calc(19px * var(--fs-mult)); font-weight:800; margin-bottom:2px;}
-.lock-sub{font-size:calc(12.5px * var(--fs-mult)); opacity:.8; margin-bottom:22px;}
-.kasir-tiles{display:flex; flex-wrap:wrap; gap:12px; justify-content:center;}
-.kasir-tile{width:84px; display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; background:rgba(255,255,255,.12);
-  padding:12px 6px; border-radius:14px; border:none;}
-.kasir-avatar{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center;
-  justify-content:center; font-weight:800; font-size:calc(17px * var(--fs-mult));}
-.pin-dots{display:flex; gap:12px; margin:18px 0;}
-.pin-dot{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6);}
-.pin-dot.filled{background:#fff;}
-.pin-keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:240px;}
-.pin-key{padding:16px 0; text-align:center; font-size:calc(20px * var(--fs-mult)); font-weight:700; background:rgba(255,255,255,.12); border:none;
-  border-radius:50%; color:#fff; width:64px; height:64px; justify-self:center;}
-.pin-key:active{background:rgba(255,255,255,.28);}
-.linklike{color:#fff; text-decoration:underline; font-size:calc(12.5px * var(--fs-mult)); opacity:.85; background:none; border:none; margin-top:14px;}
+.lock-logo{font-size:calc(48px * var(--fs-mult)); margin-bottom:12px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.15));}
+.lock-title{font-size:calc(20px * var(--fs-mult)); font-weight:800; margin-bottom:4px; letter-spacing: -0.01em;}
+.lock-sub{font-size:calc(13px * var(--fs-mult)); opacity:.8; margin-bottom:26px;}
+.kasir-tiles{display:flex; flex-wrap:wrap; gap:14px; justify-content:center;}
+.kasir-tile{width:88px; display:flex; flex-direction:column; align-items:center; gap:8px; color:#fff; background:rgba(255,255,255,.12);
+  padding:14px 6px; border-radius:18px; border:1px solid rgba(255,255,255,.08); cursor:pointer;
+  transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;}
+.kasir-tile:hover{transform:scale(1.08); background:rgba(255,255,255,.18);}
+.kasir-tile:active{transform:scale(0.95);}
+.kasir-avatar{width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center;
+  justify-content:center; font-weight:800; font-size:calc(18px * var(--fs-mult)); filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));}
+.pin-dots{display:flex; gap:14px; margin:22px 0;}
+.pin-dot{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6); transition:all 0.15s ease;}
+.pin-dot.filled{background:#fff; transform:scale(1.15); box-shadow:0 0 8px #fff;}
+.pin-keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:250px;}
+.pin-key{padding:16px 0; text-align:center; font-size:calc(21px * var(--fs-mult)); font-weight:700; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.06);
+  border-radius:50%; color:#fff; width:64px; height:64px; justify-self:center; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:all 0.15s ease;}
+.pin-key:active{background:rgba(255,255,255,.28); transform:scale(0.92);}
+.linklike{color:#fff; text-decoration:none; font-weight:600; font-size:calc(12.5px * var(--fs-mult)); opacity:.85; background:rgba(255,255,255,.1); border:none; margin-top:20px; padding:6px 14px; border-radius:12px; cursor:pointer; transition:all 0.2s ease;}
+.linklike:hover{opacity:1; background:rgba(255,255,255,.18);}
 
-.empty-state{text-align:center; padding:40px 10px; color:var(--muted);}
-.empty-state .ic{font-size:calc(38px * var(--fs-mult)); margin-bottom:8px;}
+.empty-state{text-align:center; padding:40px 10px; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center;}
+.empty-state .ic{font-size:calc(38px * var(--fs-mult)); margin-bottom:12px; opacity:0.8;}
 
-.ripple{position:relative;}
+.ripple{position:relative; overflow:hidden;}
+
+/* SVG Icon System classes */
+.svg-ic {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.2s ease;
+}
+.svg-ic.lg {
+  width: 24px;
+  height: 24px;
+}
+.svg-ic.xl {
+  width: 32px;
+  height: 32px;
+}
+.svg-ic.sm {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+/* Icon container animators */
+.ic-spin .svg-ic {
+  animation: spin 8s infinite linear;
+}
+.navbtn:hover .svg-ic, .shortcut:hover .svg-ic {
+  transform: scale(1.18);
+}
+.shortcut:hover .ic-bounce .svg-ic {
+  animation: bounce 0.6s ease infinite alternate;
+}
+.shortcut:hover .ic-spin .svg-ic {
+  animation: spin 2s infinite linear;
+}
+.shortcut:hover .ic-shake .svg-ic {
+  animation: shake 0.4s ease infinite;
+}
+.shortcut:hover .ic-rotate180 .svg-ic {
+  transform: rotate(180deg);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#0F766E">
+<meta name="theme-color" content="#4f46e5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kasir">
@@ -193,14 +307,47 @@ const ACC_COLOR = {ewallet:'var(--ewallet)', bank:'var(--bank)', cash:'var(--cas
 const ACC_LABEL = {ewallet:'E-Wallet', bank:'Bank', cash:'Cash', voucher:'Voucher',
   barang:'Barang', ppob_server:'PPOB Server'};
 
+const ICONS = {
+  home: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  plus: '<svg class="svg-ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  repeat: '<svg class="svg-ic" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  history: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/><line x1="12" y1="7" x2="12" y2="12"/><polyline points="12 12 16 14"/></svg>',
+  settings: '<svg class="svg-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  user: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  lock: '<svg class="svg-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  unlock: '<svg class="svg-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',
+  'arrow-left': '<svg class="svg-ic" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  alert: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  wallet: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h4v-6Z"/></svg>',
+  'bar-chart': '<svg class="svg-ic" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  tag: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  trash: '<svg class="svg-ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+  edit: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+  download: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  upload: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  type: '<svg class="svg-ic" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+  info: '<svg class="svg-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  check: '<svg class="svg-ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  search: '<svg class="svg-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  people: '<svg class="svg-ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  database: '<svg class="svg-ic" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>'
+};
+
+function getIcon(name, sizeClass, customStyle) {
+  let html = ICONS[name] || '';
+  if (!html) return '';
+  if (sizeClass) {
+    html = html.replace('class="svg-ic"', `class="svg-ic ${sizeClass}"`);
+  }
+  if (customStyle) {
+    html = html.replace('viewBox=', `style="${customStyle}" viewBox=`);
+  }
+  return html;
+}
+
 let DB = null;
 
 function nowIso(){ return new Date().toISOString(); }
-// ponytail: pakai locale 'en-CA' -> format YYYY-MM-DD tapi dari tanggal KALENDER LOKAL
-// perangkat, bukan UTC (beda dengan toISOString() yang selalu UTC). Ini akar masalah
-// bug "tanggal baru tidak bisa input setelah tutup kasir": untuk WIB (UTC+7), jam
-// 00:00-06:59 WIB itu masih tanggal kemarin kalau dihitung UTC, jadi kena kunci
-// closing.tanggal kemarin padahal buat pengguna sudah hari baru.
 function todayStr(){ return new Date().toLocaleDateString('en-CA'); }
 function uid(table){ const id = DB.nextId[table]++; return id; }
 function fmtRp(n){ n = Math.round(Number(n)||0); const neg = n<0; n=Math.abs(n);
@@ -208,7 +355,8 @@ function fmtRp(n){ n = Math.round(Number(n)||0); const neg = n<0; n=Math.abs(n);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toast(msg, type){
   const t = document.getElementById('toast');
-  t.textContent = (type==='error'?'⚠ ':type==='ok'?'✓ ':'') + msg;
+  const icon = type === 'error' ? getIcon('alert', 'sm') : type === 'ok' ? getIcon('check', 'sm') : getIcon('info', 'sm');
+  t.innerHTML = icon + ' <span>' + msg + '</span>';
   t.style.background = type==='error' ? '#991b1b' : type==='ok' ? '#065f46' : '#0f172a';
   t.classList.add('show');
   clearTimeout(toast._t);
@@ -551,30 +699,36 @@ function render(){
 }
 
 function renderTopbar(screen){
-  const titles = {dashboard:'🏠 Dashboard', input:'➕ Input Transaksi', transfer:'🔁 Pindah Saldo', riwayat:'📜 Riwayat',
-    setting:'⚙️ Pengaturan', kasbon:'💰 Kasbon', tutupkasirpilih:'⛔ Tutup Kasir', tutupkasir:'⛔ Tutup Sebagian', tutupkasirseluruh:'⛔ Tutup Seluruh', laporan:'📝 Laporan', audit:'📃 Audit Log',
-    settingAkun:'🧍 Kelola Akun', settingKategori:'📎 Kelola Kategori', settingKasir:'💻 Kelola Kasir & PIN',
-    settingImportExport:'📕 Import / Export CSV', settingFont:'⚡ Ukuran Font', txDetail:'💹 Detail Transaksi',
-    editTx:'✏️ Edit Transaksi'};
+  const titles = {dashboard:'Dashboard', input:'Input Transaksi', transfer:'Pindah Saldo', riwayat:'Riwayat',
+    setting:'Pengaturan', kasbon:'Kasbon', tutupkasirpilih:'Tutup Kasir', tutupkasir:'Tutup Sebagian', tutupkasirseluruh:'Tutup Seluruh', laporan:'Laporan Laba Rugi', audit:'Audit Log',
+    settingAkun:'Kelola Akun', settingKategori:'Kelola Kategori', settingKasir:'Kelola Kasir & PIN',
+    settingImportExport:'Import / Export CSV', settingFont:'Ukuran Font', txDetail:'Detail Transaksi',
+    editTx:'Edit Transaksi'};
+  const iconNames = {dashboard:'home', input:'plus', transfer:'repeat', riwayat:'history',
+    setting:'settings', kasbon:'wallet', tutupkasirpilih:'lock', tutupkasir:'lock', tutupkasirseluruh:'lock', laporan:'bar-chart', audit:'alert',
+    settingAkun:'user', settingKategori:'tag', settingKasir:'people',
+    settingImportExport:'download', settingFont:'type', txDetail:'bar-chart', editTx:'edit'};
   const isRoot = TABS.includes(screen);
   const kasir = getKasir(DB.currentKasirId);
+  const screenIconName = iconNames[screen] || 'info';
+  const screenIcon = getIcon(screenIconName, 'lg', 'opacity:0.95; margin-right:4px;');
   return `
-    ${!isRoot ? `<button class="back-btn" onclick="goBack()">⏪</button>` : `<span style="width:34px"></span>`}
-    <h1>${titles[screen]||'Kasir'}</h1>
-    <span class="kasir-chip">👤 ${esc(kasir?kasir.nama:'-')}</span>
-    <button class="lock-btn" onclick="lockNow()">🔒</button>
+    ${!isRoot ? `<button class="back-btn" onclick="goBack()">${getIcon('arrow-left', 'sm')}</button>` : `<span style="width:34px"></span>`}
+    <h1>${screenIcon}<span>${titles[screen]||'Kasir'}</span></h1>
+    <span class="kasir-chip">${getIcon('user', 'sm')}<span>${esc(kasir?kasir.nama:'-')}</span></span>
+    <button class="lock-btn" onclick="lockNow()">${getIcon('lock', 'sm')}</button>
   `;
 }
 function lockNow(){ DB.currentKasirId=null; render(); }
 
 function renderBottomNav(screen){
   const items = [
-    ['dashboard','🏠','Dashboard'], ['input','➕','Input'], ['transfer','🔁','Pindah'],
-    ['riwayat','📜','Riwayat'], ['setting','⚙️','Setting']
+    ['dashboard','home','Dashboard'], ['input','plus','Input'], ['transfer','repeat','Pindah'],
+    ['riwayat','history','Riwayat'], ['setting','settings','Setting']
   ];
-  return items.map(([id,ic,label])=>`
+  return items.map(([id,iconName,label])=>`
     <button class="navbtn ${screen===id?'active':''}" onclick="navigate('${id}')">
-      <span class="ic">${ic}</span><span>${label}</span>
+      <span class="ic">${getIcon(iconName)}</span><span>${label}</span>
     </button>`).join('');
 }
 
@@ -668,22 +822,22 @@ function screenDashboard(){
       <div class="val">${fmtRp(pendapatanRiil)}</div>
     </div>
     <div class="card-sub">
-      <div class="lbl">VOLUME PENJUALAN — ${rangeLabel} &nbsp;<span title="Total nilai transaksi penjualan/jasa (Tarik, Topup, produk PPOB, barang). Mutasi kas & pindah saldo antar akun tidak termasuk.">ⓘ</span></div>
+      <div class="lbl">VOLUME PENJUALAN — ${rangeLabel} &nbsp;<span style="display:inline-block;cursor:help;" title="Total nilai transaksi penjualan/jasa (Tarik, Topup, produk PPOB, barang). Mutasi kas & pindah saldo antar akun tidak termasuk.">${getIcon('info', 'sm')}</span></div>
       <div class="val" style="color:var(--muted)">${fmtRp(volume)}</div>
       <div class="hint">Nilai transaksi penjualan/jasa, bukan pendapatan bersih Anda.</div>
     </div>
     ${alerts.length? `<div class="alert-strip">${alerts.map(a=>`<div class="alert-chip ${a.danger?'danger':''}">${esc(a.txt)}</div>`).join('')}</div>`:''}
 
-    <div class="section-title">Pintasan</div>
+    <div class="section-title">${getIcon('plus', 'sm')} Pintasan</div>
     <div class="shortcuts">
-      <button class="shortcut" style="background:#0F766E" onclick="navigate('tutupkasirpilih')"><span class="ic">🔐</span>Tutup Kasir</button>
-      <button class="shortcut" style="background:var(--mutasi)" onclick="navigate('transfer')"><span class="ic">🔁</span>Pindah Saldo</button>
-      <button class="shortcut" style="background:var(--bank)" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan</button>
-      <button class="shortcut" style="background:var(--voucher)" onclick="navigate('laporan')"><span class="ic">🏷️</span>Per Kategori</button>
-      <button class="shortcut" style="background:var(--warning)" onclick="navigate('kasbon')"><span class="ic">🧾</span>Kasbon</button>
+      <button class="shortcut ic-shake" style="background:var(--primary)" onclick="navigate('tutupkasirpilih')"><span class="ic">${getIcon('lock')}</span>Tutup Kasir</button>
+      <button class="shortcut ic-spin" style="background:var(--mutasi)" onclick="navigate('transfer')"><span class="ic">${getIcon('repeat')}</span>Pindah Saldo</button>
+      <button class="shortcut ic-bounce" style="background:var(--bank)" onclick="navigate('laporan')"><span class="ic">${getIcon('bar-chart')}</span>Laporan</button>
+      <button class="shortcut ic-rotate180" style="background:var(--voucher)" onclick="navigate('laporan')"><span class="ic">${getIcon('tag')}</span>Kategori</button>
+      <button class="shortcut ic-shake" style="background:var(--warning)" onclick="navigate('kasbon')"><span class="ic">${getIcon('wallet')}</span>Kasbon</button>
     </div>
 
-    <div class="section-title">Saldo Akun</div>
+    <div class="section-title">${getIcon('database', 'sm')} Saldo Akun</div>
     ${Object.keys(byTipe).map(tipe=>`
       <div style="font-size:calc(11.5px * var(--fs-mult));font-weight:700;color:var(--muted);margin:8px 0 4px 2px;">${ACC_LABEL[tipe]}</div>
       ${byTipe[tipe].map(a=>{
@@ -694,7 +848,7 @@ function screenDashboard(){
           <div class="saldo">${fmtRp(s)}</div>
         </div>`;
       }).join('')}
-    `).join('') || `<div class="empty-state"><div class="ic">🏦</div>Belum ada akun aktif.<br>Tambahkan lewat Setting → Kelola Akun.</div>`}
+    `).join('') || `<div class="empty-state"><div class="ic">${getIcon('database', 'xl')}</div>Belum ada akun aktif.<br>Tambahkan lewat Setting → Kelola Akun.</div>`}
   `;
 }
 
@@ -798,7 +952,7 @@ function screenInput(fresh){
     </div>
 
     <div style="height:16px"></div>
-    <button class="btn" onclick="submitTransaksi()">${editingTxId? 'Perbarui Transaksi' : 'Simpan Transaksi'}</button>
+    <button class="btn" onclick="submitTransaksi()">${editingTxId? getIcon('edit', 'sm') + ' Perbarui Transaksi' : getIcon('check', 'sm') + ' Simpan Transaksi'}</button>
   `;
 }
 window._expenseType = 'COGS';
@@ -932,7 +1086,7 @@ function submitTransaksi(){
     DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==orig.id);
     if(paymentStatus==='unpaid'){
       DB.kasbon.push({id:uid('kasbon'), transaction_id:orig.id, nama_pelanggan:pelanggan, account_id:acc.id,
-        amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan, arah:kasbonArah});
+        amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan});
     }
     syncCashMirror(orig, cat);
     saveDB();
@@ -963,7 +1117,7 @@ function submitTransaksi(){
   DB.transactions.push(tx);
   if(paymentStatus==='unpaid'){
     DB.kasbon.push({id:uid('kasbon'), transaction_id:tx.id, nama_pelanggan:pelanggan, account_id:acc.id,
-      amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan, arah:kasbonArah});
+      amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan});
   }
   syncCashMirror(tx, cat);
   saveDB();
@@ -1003,7 +1157,7 @@ function screenTransfer(fresh){
     <textarea id="tr-catatan" placeholder="mis. Setor kas laci ke Sea Bank" onfocus="scrollToMe(this)"></textarea>
 
     <div style="height:10px"></div>
-    <button class="btn" style="background:var(--mutasi)" onclick="submitTransfer()">Pindahkan Saldo</button>
+    <button class="btn" style="background:var(--mutasi)" onclick="submitTransfer()">${getIcon('repeat', 'sm')} Pindahkan Saldo</button>
   `;
 }
 window._kpOnChange = ()=>{ const el=document.getElementById('transfer-preview'); if(el) el.innerHTML = transferPreviewHtml(); };
@@ -1076,8 +1230,9 @@ function riwayatFilteredList(){
 function screenRiwayat(){
   const tabs = [['all','Semua'],['penjualan','Penjualan'],['Mutasi','Mutasi'],['Netral','Netral']];
   return `
-    <div class="card" style="padding:2px 14px;margin-bottom:8px;">
-      <input type="text" id="riwayat-search" placeholder="🔍 Cari transaksi (jenis, akun, catatan)..." value="${esc(riwayatSearch)}"
+    <div class="card" style="padding:2px 14px;margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+      <span style="opacity:0.6; display:flex; align-items:center;">${getIcon('search', 'sm')}</span>
+      <input type="text" id="riwayat-search" placeholder="Cari transaksi (jenis, akun, catatan)..." value="${esc(riwayatSearch)}"
         oninput="riwayatSearch=this.value; riwayatLimit=30; renderRiwayatBody();"
         style="width:100%;border:none;outline:none;background:transparent;color:var(--text);padding:12px 0;font-size:calc(14px * var(--fs-mult));">
     </div>
@@ -1092,9 +1247,9 @@ function riwayatBodyHTML(){
   const shown = list.slice(0, riwayatLimit);
   return `
     <div class="card" style="padding:6px 14px;">
-      ${shown.length? shown.map(t=>renderTxRow(t)).join('') : `<div class="empty-state"><div class="ic">📭</div>Tidak ada transaksi.</div>`}
+      ${shown.length? shown.map(t=>renderTxRow(t)).join('') : `<div class="empty-state"><div class="ic">${getIcon('history', 'xl')}</div>Tidak ada transaksi.</div>`}
     </div>
-    ${list.length > shown.length ? `<button class="btn btn-outline" onclick="riwayatLimit+=30; renderRiwayatBody();">Muat Lebih Banyak</button>` : ''}
+    ${list.length > shown.length ? `<button class="btn btn-outline" onclick="riwayatLimit+=30; renderRiwayatBody();">${getIcon('plus', 'sm')} Muat Lebih Banyak</button>` : ''}
   `;
 }
 function renderRiwayatBody(){ document.getElementById('riwayat-body').innerHTML = riwayatBodyHTML(); }
@@ -1106,8 +1261,8 @@ function renderTxRow(t){
   const badges = [];
   if(t.flow==='Mutasi') badges.push('<span class="badge badge-mutasi">Mutasi</span>');
   if(t.payment_status==='unpaid') badges.push('<span class="badge badge-unpaid">Kasbon</span>');
-  if(t.locked) badges.push('<span class="badge badge-locked">🔒</span>');
-  if(t.flag_suspect) badges.push('<span class="badge badge-out">⚑ Audit</span>');
+  if(t.locked) badges.push(`<span class="badge badge-locked">${getIcon('lock', 'sm')}</span>`);
+  if(t.flag_suspect) badges.push(`<span class="badge badge-out">${getIcon('alert', 'sm')} Audit</span>`);
   return `
     <div class="row-item" onclick="navigate('txDetail',{id:${t.id}})">
       <div class="row-dot" style="background:${color}"></div>
@@ -1120,12 +1275,13 @@ function renderTxRow(t){
 }
 function screenTxDetail(){
   const t = DB.transactions.find(x=>x.id===navParams.id);
-  if(!t) return '<div class="empty-state">Transaksi tidak ditemukan.</div>';
+  if(!t) return `<div class="empty-state"><div class="ic">${getIcon('alert', 'xl')}</div>Transaksi tidak ditemukan.</div>`;
   const acc = getAccount(t.account_id);
+  const flowIcon = t.flow === 'Pemasukan' ? getIcon('plus', 'sm', 'color:var(--success)') : t.flow === 'Pengeluaran' ? getIcon('arrow-left', 'sm', 'color:var(--danger)') : getIcon('repeat', 'sm', 'color:var(--mutasi)');
   return `
     <div class="card">
-      <div class="section-title" style="margin-top:0">${t.flow}</div>
-      <div style="font-size:calc(19px * var(--fs-mult));font-weight:800;margin-bottom:10px;">${fmtRp(t.amount)}</div>
+      <div class="section-title" style="margin-top:0">${flowIcon} <span>${t.flow}</span></div>
+      <div style="font-size:calc(22px * var(--fs-mult));font-weight:800;margin-bottom:12px;letter-spacing:-0.01em;">${fmtRp(t.amount)}</div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Tanggal</div><div class="row-title">${t.tanggal}</div></div></div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Akun</div><div class="row-title">${esc(acc?acc.name:'-')}${t.target_account_id?' → '+esc(getAccount(t.target_account_id)?.name||'-'):''}</div></div></div>
       <div class="row-item"><div class="row-main"><div class="row-sub">Kategori / Deskripsi</div><div class="row-title">${esc(t.kategori||'-')} — ${esc(t.jenis)}</div></div></div>
@@ -1134,10 +1290,10 @@ function screenTxDetail(){
       <div class="row-item"><div class="row-main"><div class="row-sub">Status Bayar</div><div class="row-title">${t.payment_status==='paid'?'Lunas':'Kasbon (Belum Bayar)'}</div></div></div>
       ${t.catatan? `<div class="row-item"><div class="row-main"><div class="row-sub">Catatan</div><div class="row-title">${esc(t.catatan)}</div></div></div>`:''}
       ${t.flag_suspect? `<div class="row-item"><div class="row-main"><div class="row-sub" style="color:var(--danger)">Ditandai Audit</div><div class="row-title">${esc(t.suspect_reasons)}</div></div></div>`:''}
-      ${t.locked? `<div class="hint" style="color:var(--danger);margin-top:6px;">🔒 Terkunci — sudah masuk periode Tutup Kasir, tidak bisa diubah/dihapus. Buat transaksi penyesuaian baru jika perlu koreksi.</div>`
+      ${t.locked? `<div class="hint" style="color:var(--danger);margin-top:6px;display:flex;align-items:center;gap:4px;">${getIcon('lock', 'sm')} Terkunci — sudah masuk periode Tutup Kasir, tidak bisa diubah/dihapus.</div>`
         : `<div class="btn-row" style="margin-top:14px;gap:8px;">
-             <button class="btn" style="background:var(--primary)" onclick="startEditTx(${t.id})">Edit Transaksi</button>
-             <button class="btn btn-danger" onclick="deleteTx(${t.id})">Hapus Transaksi</button>
+             <button class="btn" style="background:var(--primary)" onclick="startEditTx(${t.id})">${getIcon('edit', 'sm')} Edit Transaksi</button>
+             <button class="btn btn-danger" onclick="deleteTx(${t.id})">${getIcon('trash', 'sm')} Hapus Transaksi</button>
            </div>`}
     </div>
   `;
@@ -1169,65 +1325,48 @@ function deleteTx(id){
 function screenKasbon(){
   const unpaid = DB.kasbon.filter(k=>k.status==='unpaid').sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
   const paid = DB.kasbon.filter(k=>k.status==='paid').slice(-15).reverse();
-  const totalPiutang = unpaid.filter(k=>(k.arah||'piutang')==='piutang').reduce((s,k)=>s+k.amount,0);
-  const totalHutang = unpaid.filter(k=>k.arah==='hutang').reduce((s,k)=>s+k.amount,0);
   return `
-    <div class="card" style="display:flex;gap:10px">
-      <div style="flex:1">
-        <div class="lbl">TOTAL PIUTANG (orang berhutang ke kita)</div>
-        <div class="val" style="color:var(--warning)">${fmtRp(totalPiutang)}</div>
-      </div>
-      <div style="flex:1">
-        <div class="lbl">TOTAL HUTANG (kita berhutang)</div>
-        <div class="val" style="color:var(--danger)">${fmtRp(totalHutang)}</div>
-      </div>
-    </div>
-    <div class="section-title">Belum Lunas (${unpaid.length})</div>
+    <div class="section-title">${getIcon('wallet', 'sm')} <span>Belum Lunas (${unpaid.length})</span></div>
     <div class="card" style="padding:6px 14px;">
       ${unpaid.length? unpaid.map(k=>{
         const jatuhTempo = (Date.now()-new Date(k.tanggal).getTime())>7*86400000;
-        const isHutang = k.arah==='hutang';
         return `<div class="row-item">
           <div class="row-dot" style="background:${jatuhTempo?'var(--danger)':'var(--warning)'}"></div>
           <div class="row-main">
-            <div class="row-title">${esc(k.nama_pelanggan)} <span class="badge" style="background:${isHutang?'#fee2e2':'#fef3c7'};color:${isHutang?'#991b1b':'#92400e'}">${isHutang?'Hutang':'Piutang'}</span> ${jatuhTempo?'<span class="badge badge-out">Jatuh Tempo</span>':''}</div>
+            <div class="row-title">${esc(k.nama_pelanggan)} ${jatuhTempo?'<span class="badge badge-out">Jatuh Tempo</span>':''}</div>
             <div class="row-sub">${k.tanggal} · akun ${esc(getAccount(k.account_id)?.name||'-')}</div>
           </div>
-          <div class="row-amt" style="color:${isHutang?'var(--danger)':'var(--warning)'}">${fmtRp(k.amount)}</div>
+          <div class="row-amt" style="color:var(--warning)">${fmtRp(k.amount)}</div>
         </div>
-        <div style="padding:0 0 10px 19px;"><button class="btn btn-sm" onclick="lunasiKasbon(${k.id})">${isHutang?'Tandai Sudah Dibayar':'Tandai Lunas'}</button></div>`;
-      }).join('') : `<div class="empty-state"><div class="ic">✅</div>Tidak ada kasbon tertunda.</div>`}
+        <div style="padding:0 0 10px 19px;"><button class="btn btn-sm" onclick="lunasiKasbon(${k.id})">${getIcon('check', 'sm')} Tandai Lunas</button></div>`;
+      }).join('') : `<div class="empty-state"><div class="ic">${getIcon('check', 'xl', 'color:var(--success)')}</div>Tidak ada kasbon tertunda.</div>`}
     </div>
-    <div class="section-title">Riwayat Lunas</div>
+    <div class="section-title">${getIcon('check', 'sm')} <span>Riwayat Lunas</span></div>
     <div class="card" style="padding:6px 14px;">
       ${paid.length? paid.map(k=>`<div class="row-item">
           <div class="row-dot" style="background:var(--success)"></div>
-          <div class="row-main"><div class="row-title">${esc(k.nama_pelanggan)} <span class="badge" style="background:${k.arah==='hutang'?'#fee2e2':'#fef3c7'};color:${k.arah==='hutang'?'#991b1b':'#92400e'}">${k.arah==='hutang'?'Hutang':'Piutang'}</span></div>
+          <div class="row-main"><div class="row-title">${esc(k.nama_pelanggan)}</div>
           <div class="row-sub">Lunas ${k.tanggal_lunas}</div></div>
           <div class="row-amt" style="color:var(--success)">${fmtRp(k.amount)}</div>
-        </div>`).join('') : `<div class="empty-state">Belum ada riwayat.</div>`}
+        </div>`).join('') : `<div class="empty-state"><div class="ic">${getIcon('wallet', 'xl', 'opacity:0.2')}</div>Belum ada riwayat.</div>`}
     </div>
   `;
 }
 function lunasiKasbon(id){
   const k = DB.kasbon.find(x=>x.id===id); if(!k) return;
-  const arah = k.arah || 'piutang'; // kasbon lama (sebelum fitur hutang) selalu piutang
-  const isHutang = arah==='hutang';
-  if(!confirm(`Tandai ${isHutang?'hutang ke':'kasbon'} ${k.nama_pelanggan} sebesar ${fmtRp(k.amount)} sebagai ${isHutang?'sudah dibayar':'lunas'}?`)) return;
+  if(!confirm(`Tandai kasbon ${k.nama_pelanggan} sebesar ${fmtRp(k.amount)} sebagai lunas?`)) return;
   const cashAcc = DB.accounts.find(a=>a.tipe==='cash' && a.aktif) || DB.accounts[0];
-  if(!cashAcc) return toast('Tidak ada akun kas aktif untuk '+(isHutang?'membayar hutang':'menerima pelunasan'),'error');
+  if(!cashAcc) return toast('Tidak ada akun kas aktif untuk menerima pelunasan','error');
   const closing = getLatestClosing(cashAcc.id);
   const today = todayStr();
-  if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa '+(isHutang?'bayar hutang':'terima pelunasan')+' hari ini','error');
+  if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa terima pelunasan hari ini','error');
   k.status='paid'; k.tanggal_lunas = today;
   const tx = {id:uid('transactions'), tanggal: today, account_id: cashAcc.id, target_account_id:null,
-    kategori_id:null, kategori: isHutang?'Pembayaran Hutang':'Pelunasan Kasbon',
-    jenis: (isHutang?'Bayar hutang: ':'Pelunasan kasbon: ')+k.nama_pelanggan,
-    flow: isHutang?'Pengeluaran':'Pemasukan', is_penjualan:false,
-    amount:k.amount, profit:0, catatan:(isHutang?'Pembayaran hutang #':'Pelunasan kasbon #')+k.id, expense_type: isHutang?'OPEX':null, payment_status:'paid',
+    kategori_id:null, kategori:'Pelunasan Kasbon', jenis:'Pelunasan kasbon: '+k.nama_pelanggan, flow:'Pemasukan', is_penjualan:false,
+    amount:k.amount, profit:0, catatan:'Pelunasan kasbon #'+k.id, expense_type:null, payment_status:'paid',
     netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
   DB.transactions.push(tx);
-  saveDB(); toast(isHutang?'Hutang dibayar':'Kasbon dilunasi','ok'); navigate('kasbon');
+  saveDB(); toast('Kasbon dilunasi','ok'); navigate('kasbon');
 }
 
 /* ---------------- TUTUP KASIR ---------------- */
@@ -1593,16 +1732,16 @@ function screenAudit(){
   const flagged = DB.transactions.filter(t=>t.flag_suspect).slice().reverse();
   const closingsWithSelisih = DB.closings.filter(c=>c.selisih!==0).slice().reverse();
   return `
-    <div class="section-title">Transaksi Ditandai (${flagged.length})</div>
+    <div class="section-title">${getIcon('alert', 'sm')} <span>Transaksi Ditandai (${flagged.length})</span></div>
     <div class="card" style="padding:6px 14px;">
       ${flagged.length? flagged.map(t=>`
         <div class="row-item" onclick="navigate('txDetail',{id:${t.id}})">
           <div class="row-dot" style="background:var(--danger)"></div>
           <div class="row-main"><div class="row-title">${esc(t.jenis)}</div><div class="row-sub">${esc(t.suspect_reasons)}</div></div>
           <div class="row-amt">${fmtRp(t.amount)}</div>
-        </div>`).join('') : '<div class="empty-state"><div class="ic">✅</div>Tidak ada transaksi mencurigakan.</div>'}
+        </div>`).join('') : `<div class="empty-state"><div class="ic">${getIcon('check', 'xl', 'color:var(--success)')}</div>Tidak ada transaksi mencurigakan.</div>`}
     </div>
-    <div class="section-title">Selisih Tutup Kasir</div>
+    <div class="section-title">${getIcon('lock', 'sm')} <span>Selisih Tutup Kasir</span></div>
     <div class="card" style="padding:6px 14px;">
       ${closingsWithSelisih.length? closingsWithSelisih.map(c=>{
         const relKasbon = DB.kasbon.filter(k=>k.account_id===c.account_id && k.tanggal===c.tanggal);
@@ -1612,7 +1751,7 @@ function screenAudit(){
           <div class="row-sub">${relKasbon.length? relKasbon.length+' kasbon terkait hari itu — cek dulu sebelum simpulkan kecurangan':'Tidak ada kasbon terkait'}</div></div>
           <div class="row-amt" style="color:var(--warning)">${fmtRp(c.selisih)}</div>
         </div>`;
-      }).join('') : '<div class="empty-state">Belum ada selisih tercatat.</div>'}
+      }).join('') : `<div class="empty-state"><div class="ic">${getIcon('check', 'xl', 'color:var(--success)')}</div>Belum ada selisih tercatat.</div>`}
     </div>
   `;
 }
@@ -1621,15 +1760,15 @@ function screenAudit(){
 function screenSettingHome(){
   return `
     <div class="card settings-list" style="padding:6px 4px;">
-      <a class="setting-item" onclick="navigate('settingAkun')"><span class="ic">🏦</span>Kelola Akun</a>
-      <a class="setting-item" onclick="navigate('settingKategori')"><span class="ic">🏷️</span>Kelola Kategori</a>
-      <a class="setting-item" onclick="navigate('settingKasir')"><span class="ic">👤</span>Kelola Kasir & PIN</a>
-      <a class="setting-item" onclick="navigate('kasbon')"><span class="ic">🧾</span>Kasbon</a>
-      <a class="setting-item" onclick="navigate('laporan')"><span class="ic">📊</span>Laporan Laba Rugi</a>
-      <a class="setting-item" onclick="navigate('audit')"><span class="ic">🔍</span>Audit Log</a>
-      <a class="setting-item" onclick="navigate('tutupkasirpilih')"><span class="ic">🔐</span>Tutup Kasir</a>
-      <a class="setting-item" onclick="navigate('settingImportExport')"><span class="ic">⇅</span>Import / Export CSV</a>
-      <a class="setting-item" onclick="navigate('settingFont')"><span class="ic">🔤</span>Ukuran Font</a>
+      <a class="setting-item" onclick="navigate('settingAkun')"><span class="ic">${getIcon('database', 'sm')}</span>Kelola Akun</a>
+      <a class="setting-item" onclick="navigate('settingKategori')"><span class="ic">${getIcon('tag', 'sm')}</span>Kelola Kategori</a>
+      <a class="setting-item" onclick="navigate('settingKasir')"><span class="ic">${getIcon('people', 'sm')}</span>Kelola Kasir & PIN</a>
+      <a class="setting-item" onclick="navigate('kasbon')"><span class="ic">${getIcon('wallet', 'sm')}</span>Kasbon</a>
+      <a class="setting-item" onclick="navigate('laporan')"><span class="ic">${getIcon('bar-chart', 'sm')}</span>Laporan Laba Rugi</a>
+      <a class="setting-item" onclick="navigate('audit')"><span class="ic">${getIcon('info', 'sm')}</span>Audit Log</a>
+      <a class="setting-item" onclick="navigate('tutupkasirpilih')"><span class="ic">${getIcon('lock', 'sm')}</span>Tutup Kasir</a>
+      <a class="setting-item" onclick="navigate('settingImportExport')"><span class="ic">${getIcon('download', 'sm')}</span>Import / Export CSV</a>
+      <a class="setting-item" onclick="navigate('settingFont')"><span class="ic">${getIcon('type', 'sm')}</span>Ukuran Font</a>
     </div>
     <div class="hint" style="text-align:center;margin-top:8px;">Kasir Front House · v3-web · data tersimpan lokal di perangkat ini</div>
   `;
@@ -1930,14 +2069,6 @@ function screenImportExport(){
       <div style="height:8px"></div>
       <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
     </div>
-    <div class="section-title">Restore dari Backup JSON</div>
-    <div class="card">
-      <div class="hint" style="color:var(--danger)">⚠ Restore akan MENIMPA seluruh data yang ada sekarang (transaksi, akun, kategori, closing) dengan isi file backup. Pastikan file-nya benar sebelum lanjut.</div>
-      <div style="height:10px"></div>
-      <input type="file" id="restore-file" accept="application/json,.json">
-      <div style="height:8px"></div>
-      <button class="btn btn-danger" onclick="restoreJson()">Restore dari File Backup</button>
-    </div>
     <div class="section-title">Import Transaksi dari CSV</div>
     <div class="card">
       <div class="hint">Kolom wajib: tanggal(YYYY-MM-DD), akun, kategori, jenis, nominal, profit, catatan, status_bayar(lunas/kasbon), nama_pelanggan</div>
@@ -1952,24 +2083,7 @@ function screenImportExport(){
   `;
 }
 function csvEscape(v){ v=String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
-async function downloadFile(filename, content, mime){
-  // Di APK (Capacitor Android), WebView gak punya download manager buat <a download> blob URL
-  // — makanya klik Backup keliatan gak ngapa-ngapain. Di native, tulis file ke Cache lalu
-  // buka Share sheet (user pilih simpan ke Files/WhatsApp/Email/dll). Butuh @capacitor/filesystem
-  // + @capacitor/share terpasang & di-`cap sync android` — kalau belum, tetep gagal terkontrol
-  // (toast error), bukan diam-diam gak ngapa-ngapain kayak sebelumnya.
-  if(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()){
-    try{
-      const { Filesystem, Directory, Encoding, Share } = Capacitor.Plugins;
-      if(!Filesystem) throw new Error('Plugin Filesystem belum terpasang (npm i @capacitor/filesystem lalu cap sync android)');
-      const res = await Filesystem.writeFile({ path: filename, data: content, directory: Directory.Cache, encoding: Encoding.UTF8 });
-      if(Share) await Share.share({ title: filename, url: res.uri });
-      else toast('File tersimpan di: '+res.uri, 'ok');
-    }catch(e){
-      toast('Gagal simpan file: '+e.message, 'error');
-    }
-    return;
-  }
+function downloadFile(filename, content, mime){
   const blob = new Blob([content], {type:mime||'text/csv;charset=utf-8;'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -1993,29 +2107,6 @@ function exportAkunCsv(){
 function backupJson(){
   downloadFile('backup_kasir_'+todayStr()+'.json', JSON.stringify(DB, null, 2), 'application/json');
   toast('Backup JSON diunduh','ok');
-}
-function restoreJson(){
-  const inp = document.getElementById('restore-file');
-  const file = inp && inp.files[0];
-  if(!file) return toast('Pilih file backup JSON dulu','error');
-  if(!confirm('Restore akan MENIMPA semua data yang ada sekarang dengan isi file backup ini dan tidak bisa dibatalkan. Yakin lanjut?')) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    let parsed;
-    try{ parsed = JSON.parse(reader.result); }
-    catch(e){ return toast('File bukan JSON valid','error'); }
-    if(!parsed || !Array.isArray(parsed.accounts) || !Array.isArray(parsed.categories) ||
-       !Array.isArray(parsed.transactions) || !parsed.nextId){
-      return toast('File ini bukan backup Kasir Front House yang valid','error');
-    }
-    DB = parsed;
-    normalizeDB();
-    saveDB();
-    toast('Restore berhasil, memuat ulang...','ok');
-    setTimeout(()=>location.reload(), 600);
-  };
-  reader.onerror = () => toast('Gagal membaca file','error');
-  reader.readAsText(file);
 }
 function downloadTemplateCsv(){
   const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
@@ -2099,7 +2190,7 @@ function renderLock(){
 function renderLockSetup(){
   return `
     <div class="lock-inner">
-      <div class="lock-logo">🧾</div>
+      <div class="lock-logo">${getIcon('database', 'xl', 'width:64px;height:64px;')}</div>
       <div class="lock-title">Kasir Front House</div>
       <div class="lock-sub">Buat kasir pertama untuk mulai</div>
       <div style="width:100%;max-width:280px;">
@@ -2107,7 +2198,7 @@ function renderLockSetup(){
         <input type="text" id="setup-pin" inputmode="numeric" maxlength="6" placeholder="PIN (opsional)" onfocus="scrollToMe(this)"
           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         <div style="height:12px"></div>
-        <button class="btn" onclick="setupFirstKasir()">Mulai</button>
+        <button class="btn" onclick="setupFirstKasir()">${getIcon('check', 'sm')} Mulai</button>
       </div>
     </div>`;
 }
@@ -2124,7 +2215,7 @@ function renderLockSelect(){
   const kasirs = DB.kasir.filter(k=>k.aktif);
   return `
     <div class="lock-inner">
-      <div class="lock-logo">🧾</div>
+      <div class="lock-logo">${getIcon('people', 'xl', 'width:64px;height:64px;')}</div>
       <div class="lock-title">Kasir Front House</div>
       <div class="lock-sub">Pilih kasir untuk masuk</div>
       <div class="kasir-tiles">
@@ -2139,7 +2230,7 @@ function renderLockPin(k){
   const dots = Array.from({length:6}).map((_,i)=>`<div class="pin-dot ${i<lockPin.length?'filled':''}"></div>`).join('');
   return `
     <div class="lock-inner">
-      <div class="lock-logo">🔒</div>
+      <div class="lock-logo">${getIcon('lock', 'xl', 'width:64px;height:64px;')}</div>
       <div class="lock-title">${esc(k.nama)}</div>
       <div class="lock-sub">Masukkan PIN</div>
       <div class="pin-dots">${dots}</div>
@@ -2149,7 +2240,7 @@ function renderLockPin(k){
         <button class="pin-key" onclick="pinPress('0')">0</button>
         <button class="pin-key" onclick="pinPress('back')">⌫</button>
       </div>
-      <button class="linklike" onclick="lockSelectedKasir=null; lockPin=''; renderLock();">← Ganti Kasir</button>
+      <button class="linklike" onclick="lockSelectedKasir=null; lockPin=''; renderLock();">${getIcon('arrow-left', 'sm')} Ganti Kasir</button>
     </div>`;
 }
 async function pinPress(k){
