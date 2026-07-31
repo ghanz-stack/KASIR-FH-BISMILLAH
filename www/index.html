@@ -1086,7 +1086,7 @@ function submitTransaksi(){
     DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==orig.id);
     if(paymentStatus==='unpaid'){
       DB.kasbon.push({id:uid('kasbon'), transaction_id:orig.id, nama_pelanggan:pelanggan, account_id:acc.id,
-        amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan});
+        amount, tanggal:orig.tanggal, status:'unpaid', tanggal_lunas:null, catatan, arah:kasbonArah});
     }
     syncCashMirror(orig, cat);
     saveDB();
@@ -1117,7 +1117,7 @@ function submitTransaksi(){
   DB.transactions.push(tx);
   if(paymentStatus==='unpaid'){
     DB.kasbon.push({id:uid('kasbon'), transaction_id:tx.id, nama_pelanggan:pelanggan, account_id:acc.id,
-      amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan});
+      amount, tanggal:today, status:'unpaid', tanggal_lunas:null, catatan, arah:kasbonArah});
   }
   syncCashMirror(tx, cat);
   saveDB();
@@ -1325,27 +1325,40 @@ function deleteTx(id){
 function screenKasbon(){
   const unpaid = DB.kasbon.filter(k=>k.status==='unpaid').sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
   const paid = DB.kasbon.filter(k=>k.status==='paid').slice(-15).reverse();
+  const totalPiutang = unpaid.filter(k=>(k.arah||'piutang')==='piutang').reduce((s,k)=>s+k.amount,0);
+  const totalHutang = unpaid.filter(k=>k.arah==='hutang').reduce((s,k)=>s+k.amount,0);
   return `
+    <div class="card" style="display:flex;gap:10px">
+      <div style="flex:1">
+        <div class="lbl">TOTAL PIUTANG (orang berhutang ke kita)</div>
+        <div class="val" style="color:var(--warning)">${fmtRp(totalPiutang)}</div>
+      </div>
+      <div style="flex:1">
+        <div class="lbl">TOTAL HUTANG (kita berhutang)</div>
+        <div class="val" style="color:var(--danger)">${fmtRp(totalHutang)}</div>
+      </div>
+    </div>
     <div class="section-title">${getIcon('wallet', 'sm')} <span>Belum Lunas (${unpaid.length})</span></div>
     <div class="card" style="padding:6px 14px;">
       ${unpaid.length? unpaid.map(k=>{
         const jatuhTempo = (Date.now()-new Date(k.tanggal).getTime())>7*86400000;
+        const isHutang = k.arah==='hutang';
         return `<div class="row-item">
           <div class="row-dot" style="background:${jatuhTempo?'var(--danger)':'var(--warning)'}"></div>
           <div class="row-main">
-            <div class="row-title">${esc(k.nama_pelanggan)} ${jatuhTempo?'<span class="badge badge-out">Jatuh Tempo</span>':''}</div>
+            <div class="row-title">${esc(k.nama_pelanggan)} <span class="badge" style="background:${isHutang?'#fee2e2':'#fef3c7'};color:${isHutang?'#991b1b':'#92400e'}">${isHutang?'Hutang':'Piutang'}</span> ${jatuhTempo?'<span class="badge badge-out">Jatuh Tempo</span>':''}</div>
             <div class="row-sub">${k.tanggal} · akun ${esc(getAccount(k.account_id)?.name||'-')}</div>
           </div>
-          <div class="row-amt" style="color:var(--warning)">${fmtRp(k.amount)}</div>
+          <div class="row-amt" style="color:${isHutang?'var(--danger)':'var(--warning)'}">${fmtRp(k.amount)}</div>
         </div>
-        <div style="padding:0 0 10px 19px;"><button class="btn btn-sm" onclick="lunasiKasbon(${k.id})">${getIcon('check', 'sm')} Tandai Lunas</button></div>`;
+        <div style="padding:0 0 10px 19px;"><button class="btn btn-sm" onclick="lunasiKasbon(${k.id})">${getIcon('check', 'sm')} ${isHutang?'Tandai Sudah Dibayar':'Tandai Lunas'}</button></div>`;
       }).join('') : `<div class="empty-state"><div class="ic">${getIcon('check', 'xl', 'color:var(--success)')}</div>Tidak ada kasbon tertunda.</div>`}
     </div>
     <div class="section-title">${getIcon('check', 'sm')} <span>Riwayat Lunas</span></div>
     <div class="card" style="padding:6px 14px;">
       ${paid.length? paid.map(k=>`<div class="row-item">
           <div class="row-dot" style="background:var(--success)"></div>
-          <div class="row-main"><div class="row-title">${esc(k.nama_pelanggan)}</div>
+          <div class="row-main"><div class="row-title">${esc(k.nama_pelanggan)} <span class="badge" style="background:${k.arah==='hutang'?'#fee2e2':'#fef3c7'};color:${k.arah==='hutang'?'#991b1b':'#92400e'}">${k.arah==='hutang'?'Hutang':'Piutang'}</span></div>
           <div class="row-sub">Lunas ${k.tanggal_lunas}</div></div>
           <div class="row-amt" style="color:var(--success)">${fmtRp(k.amount)}</div>
         </div>`).join('') : `<div class="empty-state"><div class="ic">${getIcon('wallet', 'xl', 'opacity:0.2')}</div>Belum ada riwayat.</div>`}
@@ -1354,19 +1367,23 @@ function screenKasbon(){
 }
 function lunasiKasbon(id){
   const k = DB.kasbon.find(x=>x.id===id); if(!k) return;
-  if(!confirm(`Tandai kasbon ${k.nama_pelanggan} sebesar ${fmtRp(k.amount)} sebagai lunas?`)) return;
+  const arah = k.arah || 'piutang'; // kasbon lama (sebelum fitur hutang) selalu piutang
+  const isHutang = arah==='hutang';
+  if(!confirm(`Tandai ${isHutang?'hutang ke':'kasbon'} ${k.nama_pelanggan} sebesar ${fmtRp(k.amount)} sebagai ${isHutang?'sudah dibayar':'lunas'}?`)) return;
   const cashAcc = DB.accounts.find(a=>a.tipe==='cash' && a.aktif) || DB.accounts[0];
-  if(!cashAcc) return toast('Tidak ada akun kas aktif untuk menerima pelunasan','error');
+  if(!cashAcc) return toast('Tidak ada akun kas aktif untuk '+(isHutang?'membayar hutang':'menerima pelunasan'),'error');
   const closing = getLatestClosing(cashAcc.id);
   const today = todayStr();
-  if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa terima pelunasan hari ini','error');
+  if(closing && today <= closing.tanggal) return toast('Akun kas ('+cashAcc.name+') sudah terkunci (Tutup Kasir), tidak bisa '+(isHutang?'bayar hutang':'terima pelunasan')+' hari ini','error');
   k.status='paid'; k.tanggal_lunas = today;
   const tx = {id:uid('transactions'), tanggal: today, account_id: cashAcc.id, target_account_id:null,
-    kategori_id:null, kategori:'Pelunasan Kasbon', jenis:'Pelunasan kasbon: '+k.nama_pelanggan, flow:'Pemasukan', is_penjualan:false,
-    amount:k.amount, profit:0, catatan:'Pelunasan kasbon #'+k.id, expense_type:null, payment_status:'paid',
+    kategori_id:null, kategori: isHutang?'Pembayaran Hutang':'Pelunasan Kasbon',
+    jenis: (isHutang?'Bayar hutang: ':'Pelunasan kasbon: ')+k.nama_pelanggan,
+    flow: isHutang?'Pengeluaran':'Pemasukan', is_penjualan:false,
+    amount:k.amount, profit:0, catatan:(isHutang?'Pembayaran hutang #':'Pelunasan kasbon #')+k.id, expense_type: isHutang?'OPEX':null, payment_status:'paid',
     netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
   DB.transactions.push(tx);
-  saveDB(); toast('Kasbon dilunasi','ok'); navigate('kasbon');
+  saveDB(); toast(isHutang?'Hutang dibayar':'Kasbon dilunasi','ok'); navigate('kasbon');
 }
 
 /* ---------------- TUTUP KASIR ---------------- */
@@ -2068,6 +2085,22 @@ function screenImportExport(){
       <button class="btn btn-outline" onclick="exportAkunCsv()">Export Akun (CSV)</button>
       <div style="height:8px"></div>
       <button class="btn btn-outline" onclick="backupJson()">Backup Semua Data (JSON)</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-outline" onclick="backupClipboard()">Backup ke Clipboard (lebih gampang, tinggal paste ke WA/Notes)</button>
+    </div>
+    <div class="section-title">Restore dari Backup JSON</div>
+    <div class="card">
+      <div class="hint" style="color:var(--danger)">⚠ Restore akan MENIMPA seluruh data yang ada sekarang (transaksi, akun, kategori, closing) dengan isi backup. Pastikan file/teksnya benar sebelum lanjut.</div>
+      <div style="height:10px"></div>
+      <input type="file" id="restore-file" accept="application/json,.json">
+      <div style="height:8px"></div>
+      <button class="btn btn-danger" onclick="restoreJson()">Restore dari File Backup</button>
+      <div style="height:14px"></div>
+      <div class="hint">Atau kalau backup-nya berupa teks (dari Backup ke Clipboard / WhatsApp), paste di sini:</div>
+      <div style="height:6px"></div>
+      <textarea id="restore-text" placeholder="Paste isi backup JSON di sini..." style="width:100%;min-height:100px;font-family:monospace;font-size:11px"></textarea>
+      <div style="height:8px"></div>
+      <button class="btn btn-danger" onclick="restoreJsonFromText()">Restore dari Teks</button>
     </div>
     <div class="section-title">Import Transaksi dari CSV</div>
     <div class="card">
@@ -2083,7 +2116,24 @@ function screenImportExport(){
   `;
 }
 function csvEscape(v){ v=String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
-function downloadFile(filename, content, mime){
+async function downloadFile(filename, content, mime){
+  // Di APK (Capacitor Android), WebView gak punya download manager buat <a download> blob URL
+  // — makanya klik Backup keliatan gak ngapa-ngapain. Di native, tulis file ke Cache lalu
+  // buka Share sheet (user pilih simpan ke Files/WhatsApp/Email/dll). Butuh @capacitor/filesystem
+  // + @capacitor/share terpasang & di-`cap sync android` — kalau belum, tetep gagal terkontrol
+  // (toast error), bukan diam-diam gak ngapa-ngapain kayak sebelumnya.
+  if(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()){
+    try{
+      const { Filesystem, Directory, Encoding, Share } = Capacitor.Plugins;
+      if(!Filesystem) throw new Error('Plugin Filesystem belum terpasang (npm i @capacitor/filesystem lalu cap sync android)');
+      const res = await Filesystem.writeFile({ path: filename, data: content, directory: Directory.Cache, encoding: Encoding.UTF8 });
+      if(Share) await Share.share({ title: filename, url: res.uri });
+      else toast('File tersimpan di: '+res.uri, 'ok');
+    }catch(e){
+      toast('Gagal simpan file: '+e.message, 'error');
+    }
+    return;
+  }
   const blob = new Blob([content], {type:mime||'text/csv;charset=utf-8;'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -2107,6 +2157,64 @@ function exportAkunCsv(){
 function backupJson(){
   downloadFile('backup_kasir_'+todayStr()+'.json', JSON.stringify(DB, null, 2), 'application/json');
   toast('Backup JSON diunduh','ok');
+}
+async function backupClipboard(){
+  const text = JSON.stringify(DB, null, 2);
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    toast('Backup ter-copy ke clipboard — paste ke WhatsApp/Notes/Email buat disimpan','ok');
+  }catch(e){
+    showTextBackupModal(text);
+  }
+}
+function showTextBackupModal(text){
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:16px;max-width:500px;width:100%;max-height:80vh;display:flex;flex-direction:column;gap:10px">
+    <div style="font-weight:700">Backup Manual</div>
+    <div class="hint">Tap area di bawah, Select All, lalu Copy. Paste ke WhatsApp/Notes buat disimpan.</div>
+    <textarea readonly style="width:100%;flex:1;min-height:200px;font-size:11px;font-family:monospace" onclick="this.select()">${esc(text)}</textarea>
+    <button class="btn" onclick="this.closest('div[style*=fixed]').remove()">Tutup</button>
+  </div>`;
+  document.body.appendChild(modal);
+}
+function applyRestoredDb(raw){
+  let parsed;
+  try{ parsed = JSON.parse(raw); }
+  catch(e){ return toast('Bukan JSON valid','error'); }
+  if(!parsed || !Array.isArray(parsed.accounts) || !Array.isArray(parsed.categories) ||
+     !Array.isArray(parsed.transactions) || !parsed.nextId){
+    return toast('Ini bukan backup Kasir Front House yang valid','error');
+  }
+  DB = parsed;
+  normalizeDB();
+  saveDB();
+  toast('Restore berhasil, memuat ulang...','ok');
+  setTimeout(()=>location.reload(), 600);
+}
+function restoreJson(){
+  const inp = document.getElementById('restore-file');
+  const file = inp && inp.files[0];
+  if(!file) return toast('Pilih file backup JSON dulu','error');
+  if(!confirm('Restore akan MENIMPA semua data yang ada sekarang dengan isi file backup ini dan tidak bisa dibatalkan. Yakin lanjut?')) return;
+  const reader = new FileReader();
+  reader.onload = () => applyRestoredDb(reader.result);
+  reader.onerror = () => toast('Gagal membaca file','error');
+  reader.readAsText(file);
+}
+function restoreJsonFromText(){
+  const text = document.getElementById('restore-text').value.trim();
+  if(!text) return toast('Paste isi backup JSON dulu','error');
+  if(!confirm('Restore akan MENIMPA semua data yang ada sekarang dengan isi teks ini dan tidak bisa dibatalkan. Yakin lanjut?')) return;
+  applyRestoredDb(text);
 }
 function downloadTemplateCsv(){
   const header = ['tanggal','akun','kategori','jenis','nominal','profit','catatan','status_bayar','nama_pelanggan'];
