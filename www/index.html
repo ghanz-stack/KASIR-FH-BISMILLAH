@@ -947,8 +947,8 @@ function screenInput(fresh){
       <button type="button" class="seg-btn" id="ps-unpaid" onclick="selPaymentStatus('unpaid')">Kasbon (Belum Bayar)</button>
     </div>
     <div id="pelanggan-wrap" style="display:none;">
-      <label class="f">${cat && cat.flow==='Pengeluaran' ? 'Nama Vendor / Pemberi Hutang' : 'Nama Pelanggan'}</label>
-      <input type="text" id="f-pelanggan" placeholder="${cat && cat.flow==='Pengeluaran' ? 'Nama vendor/toko' : 'Nama pelanggan'}" onfocus="scrollToMe(this)">
+      <label class="f">${cat && cat.flow==='Pengeluaran' && !cat.is_penjualan ? 'Nama Vendor / Pemberi Hutang' : 'Nama Pelanggan'}</label>
+      <input type="text" id="f-pelanggan" placeholder="${cat && cat.flow==='Pengeluaran' && !cat.is_penjualan ? 'Nama vendor/toko' : 'Nama pelanggan'}" onfocus="scrollToMe(this)">
     </div>
 
     <div style="height:16px"></div>
@@ -1038,10 +1038,10 @@ function submitTransaksi(){
   let pelanggan = '';
   if(paymentStatus==='unpaid'){
     pelanggan = document.getElementById('f-pelanggan').value.trim();
-    if(!pelanggan) return toast((cat.flow==='Pengeluaran'?'Isi nama vendor/pemberi hutang':'Isi nama pelanggan')+' untuk transaksi kasbon','error');
+    if(!pelanggan) return toast((cat.flow==='Pengeluaran' && !cat.is_penjualan?'Isi nama vendor/pemberi hutang':'Isi nama pelanggan')+' untuk transaksi kasbon','error');
     if(cat.flow!=='Pemasukan' && cat.flow!=='Pengeluaran') return toast('Kasbon cuma berlaku untuk transaksi Pemasukan (piutang) atau Pengeluaran (hutang)','error');
   }
-  const kasbonArah = cat.flow==='Pengeluaran' ? 'hutang' : 'piutang';
+  const kasbonArah = (cat.flow==='Pengeluaran' && !cat.is_penjualan) ? 'hutang' : 'piutang';
 
   // ---- Belanja Stok: bukan Pengeluaran biasa, tapi MUTASI nilai dari akun dana ke akun
   // Barang/Voucher Fisik — jadi nominal belanja ikut nambah nilai stok, gak cuma ilang.
@@ -1315,10 +1315,16 @@ function deleteTx(id){
   if(t.mirror_of) return toast('Ini mutasi Cash otomatis — hapus transaksi penjualan aslinya, mutasi ini ikut terhapus','error');
   const linkedMirror = DB.transactions.find(m=>m.mirror_of===id);
   if(linkedMirror && linkedMirror.locked) return toast('Mutasi Cash terkait sudah terkunci (Tutup Kasir), tidak bisa dihapus','error');
-  if(!confirm('Hapus transaksi ini?')) return;
+  const isKasbonSettlement = !!t.kasbon_ref_id;
+  if(!confirm(isKasbonSettlement ? 'Hapus riwayat pelunasan ini? Kasbon/hutang terkait akan otomatis balik jadi BELUM LUNAS.' : 'Hapus transaksi ini?')) return;
   DB.transactions = DB.transactions.filter(x=>x.id!==id && x.mirror_of!==id);
-  DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==id);
-  saveDB(); toast('Transaksi dihapus','ok'); navigate('riwayat');
+  if(isKasbonSettlement){
+    const k = DB.kasbon.find(x=>x.id===t.kasbon_ref_id);
+    if(k){ k.status='unpaid'; k.tanggal_lunas=null; }
+  } else {
+    DB.kasbon = DB.kasbon.filter(k=>k.transaction_id!==id);
+  }
+  saveDB(); toast(isKasbonSettlement ? 'Pelunasan dibatalkan, status balik jadi kasbon' : 'Transaksi dihapus','ok'); navigate(isKasbonSettlement?'kasbon':'riwayat');
 }
 
 /* ---------------- KASBON ---------------- */
@@ -1381,7 +1387,8 @@ function lunasiKasbon(id){
     jenis: (isHutang?'Bayar hutang: ':'Pelunasan kasbon: ')+k.nama_pelanggan,
     flow: isHutang?'Pengeluaran':'Pemasukan', is_penjualan:false,
     amount:k.amount, profit:0, catatan:(isHutang?'Pembayaran hutang #':'Pelunasan kasbon #')+k.id, expense_type: isHutang?'OPEX':null, payment_status:'paid',
-    netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso()};
+    netral_arah:null, kasir_id:DB.currentKasirId, locked:0, flag_suspect:0, suspect_reasons:'', created_at:nowIso(),
+    kasbon_ref_id: k.id};
   DB.transactions.push(tx);
   saveDB(); toast(isHutang?'Hutang dibayar':'Kasbon dilunasi','ok'); navigate('kasbon');
 }
