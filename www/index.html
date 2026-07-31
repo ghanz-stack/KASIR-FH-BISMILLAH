@@ -727,7 +727,7 @@ function renderBottomNav(screen){
     ['riwayat','history','Riwayat'], ['setting','settings','Setting']
   ];
   return items.map(([id,iconName,label])=>`
-    <button class="navbtn ${screen===id?'active':''}" onclick="navigate('${id}')">
+    <button class="navbtn ${screen===id?'active':''}" onclick="${id==='riwayat'?'riwayatAccountFilter=null; ':''}navigate('${id}')">
       <span class="ic">${getIcon(iconName)}</span><span>${label}</span>
     </button>`).join('');
 }
@@ -842,7 +842,7 @@ function screenDashboard(){
       <div style="font-size:calc(11.5px * var(--fs-mult));font-weight:700;color:var(--muted);margin:8px 0 4px 2px;">${ACC_LABEL[tipe]}</div>
       ${byTipe[tipe].map(a=>{
         const s = getSaldo(a.id); const low = s < a.ambang_minimum;
-        return `<div class="acc-card ${low?'low':''}" style="background:${ACC_COLOR[tipe]}">
+        return `<div class="acc-card ${low?'low':''}" style="background:${ACC_COLOR[tipe]};cursor:pointer" onclick="goToAccountRiwayat(${a.id})">
           <div class="name">${esc(a.name)}</div>
           <div class="tipe">${ACC_LABEL[tipe]}</div>
           <div class="saldo">${fmtRp(s)}</div>
@@ -1216,8 +1216,18 @@ function submitTransfer(){
 let riwayatFilter = 'all';
 let riwayatLimit = 30;
 let riwayatSearch = '';
+let riwayatAccountFilter = null;
+function goToAccountRiwayat(accId){
+  riwayatAccountFilter = accId; riwayatFilter='all'; riwayatSearch=''; riwayatLimit=30;
+  navigate('riwayat');
+}
+function clearRiwayatAccountFilter(){
+  riwayatAccountFilter = null; riwayatLimit=30;
+  document.getElementById('screen').innerHTML = screenRiwayat();
+}
 function riwayatFilteredList(){
   let list = DB.transactions.slice().sort((a,b)=> (b.tanggal+String(b.id).padStart(6,'0')).localeCompare(a.tanggal+String(a.id).padStart(6,'0')));
+  if(riwayatAccountFilter) list = list.filter(t=>t.account_id===riwayatAccountFilter || t.target_account_id===riwayatAccountFilter);
   if(riwayatFilter==='penjualan') list = list.filter(t=>t.flow==='Pemasukan'||t.flow==='Pengeluaran');
   else if(riwayatFilter!=='all') list = list.filter(t=>t.flow===riwayatFilter);
   const q = riwayatSearch.trim().toLowerCase();
@@ -1229,7 +1239,12 @@ function riwayatFilteredList(){
 }
 function screenRiwayat(){
   const tabs = [['all','Semua'],['penjualan','Penjualan'],['Mutasi','Mutasi'],['Netral','Netral']];
+  const filterAcc = riwayatAccountFilter ? getAccount(riwayatAccountFilter) : null;
   return `
+    ${filterAcc ? `<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--primary);color:#fff">
+      <div style="display:flex;align-items:center;gap:6px">${getIcon('database','sm')} <span>Filter akun: <b>${esc(filterAcc.name)}</b></span></div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff" onclick="clearRiwayatAccountFilter()">✕ Hapus Filter</button>
+    </div>` : ''}
     <div class="card" style="padding:2px 14px;margin-bottom:8px; display:flex; align-items:center; gap:8px;">
       <span style="opacity:0.6; display:flex; align-items:center;">${getIcon('search', 'sm')}</span>
       <input type="text" id="riwayat-search" placeholder="Cari transaksi (jenis, akun, catatan)..." value="${esc(riwayatSearch)}"
